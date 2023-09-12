@@ -1,0 +1,3 @@
+Inputs:
+    Various moving average slopes
+    indicators
