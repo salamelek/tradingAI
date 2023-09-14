@@ -6,17 +6,16 @@ from dataPlotter import plot, plotPredictionResults, comparePredictionWithTrainD
 import pandas as pd
 import numpy as np
 
+import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM
 
-df = getDf("NVDA", "2023-08-1", "2023-09-1", "5min")
+df = getDf("NVDA", "2023-01-1", "2023-04-1", "5min")
 
-
+# print(df.loc[1422, 'EMA_5_SLOPE'].item())
+# print(df.loc[1659, 'EMA_5_SLOPE'].item())
 # plot(df)
 # exit()
-
-# format the data for the AI input
-# use z-score normalization
 
 # must be a df row of all the inputs
 # ema 5, 50, 100, 200 slope, macd slope and signal slope, macd distance, rsi
@@ -32,9 +31,16 @@ trainData = pd.DataFrame(
         "macd_signal_slope": df["macd_signal_slope"],
         "macd_distance": df["macd_distance"],
         # normalize the rsi in the range -5, 5
-        "rsi": ((df["rsi"] - 50) / 10)
+        "rsi": ((df["rsi"] - 50) / 5)
     }
 )
+
+# remove any ema5 slope value that is more than 10 or less than -10
+# df = df.drop(df[abs(df['EMA_5_SLOPE']) > 10].index)
+# remove invalid values
+df.dropna()
+# reset index to avoid holes
+df = df.reset_index(drop=True)
 
 # normalize the df
 # this normalizes everything between 0 and 1
@@ -49,6 +55,10 @@ yTrain = []
 
 trimNValues = 200
 
+print(len(normalizedTrainData.index))
+print(df.loc[[1422]])
+print(normalizedTrainData.max())
+
 for index, row in normalizedTrainData.iterrows():
     if trimNValues < float(index) < (len(df.index) - 1):
         # append inputs
@@ -61,6 +71,9 @@ for index, row in normalizedTrainData.iterrows():
 # print(len(yTrain))          # 1693
 # print(len(xTrain))          # 1693
 # print(len(df["close"]))     # 1895
+
+
+print(yTrain[1220])
 
 
 # Convert training data to np arrays
@@ -83,8 +96,19 @@ model.add(LSTM(units=10, return_sequences=False))
 model.add(Dropout(0.2))
 model.add(Dense(units=1))
 
-model.compile(optimizer="adam", loss="mean_squared_error")
-model.fit(xTrain, yTrain, epochs=25, batch_size=16)
+
+def custom_mse(y_true, y_pred):
+    # Calculate the squared differences between true and predicted values
+    squared_diff = tf.pow((y_true - y_pred), 2)
+
+    # Calculate the mean of the squared differences
+    mse = tf.reduce_mean(squared_diff)
+
+    return mse
+
+
+model.compile(optimizer="adam", loss=custom_mse)
+model.fit(xTrain, yTrain, epochs=25, batch_size=32)
 
 prediction = model.predict(xTrain).flatten()
 
