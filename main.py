@@ -84,10 +84,9 @@ model.add(Dropout(0.2))
 model.add(Dense(units=1))
 
 model.compile(optimizer="adam", loss="mean_squared_error")
-model.fit(xTrain, yTrain, epochs=25, batch_size=32)
+model.fit(xTrain, yTrain, epochs=25, batch_size=16)
 
-prediction = model.predict(xTrain)
-prediction = prediction.flatten()
+prediction = model.predict(xTrain).flatten()
 
 
 # plotPredictionResults(list(df["close"]), prediction, trimNValues)
