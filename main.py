@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, LSTM
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, LSTM
 
 df = getDf("NVDA", "2023-08-1", "2023-09-1", "5min")
 
@@ -56,17 +56,19 @@ for index, row in normalized_df.iterrows():
         # TODO should not train with some data that is in xtrain (will be lazy)
         yTrain.append(normalized_df.loc[index + 1, 'ema_50_slope'].item())
 
+
+# Convert training data to np arrays
 xTrain, yTrain = np.array(xTrain), np.array(yTrain)
 xTrain = np.reshape(xTrain, (xTrain.shape[0], xTrain.shape[1], 1))
 
 # build the model
 model = Sequential()
 
-model.add(LSTM(units=50, return_sequences=True, input_shape=(xTrain.shape[1], 1)))
+model.add(LSTM(units=50, return_sequences=True, input_shape=(8, 1)))
 model.add(Dropout(0.2))
 model.add(LSTM(units=50, return_sequences=True))
 model.add(Dropout(0.2))
-model.add(LSTM(units=50, return_sequences=True))
+model.add(LSTM(units=50, return_sequences=False))
 model.add(Dropout(0.2))
 model.add(Dense(units=1))
 
@@ -76,11 +78,10 @@ model.fit(xTrain, yTrain, epochs=5, batch_size=32)
 
 prediction = model.predict(xTrain)
 
+print(prediction)
+
 unNormalizedPrediction = prediction * (maxValue - minValue) + minValue
+unNormalizedPrediction = unNormalizedPrediction.flatten()
 
-
-print(len(unNormalizedPrediction))
-print("===========================")
-print(unNormalizedPrediction[0])
-print("===========================")
-print(unNormalizedPrediction[0][0])
+plt.plot(unNormalizedPrediction)
+plt.show()
