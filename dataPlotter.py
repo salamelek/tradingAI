@@ -1,6 +1,7 @@
 # =================== PLT STUFF ===================
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot(df):
@@ -15,6 +16,7 @@ def plot(df):
     ax1.plot(df['date'], df['EMA_50'], label='EMA 50', color='red')
     ax1.plot(df['date'], df['EMA_100'], label='EMA 100', color='green')
     ax1.plot(df['date'], df['EMA_200'], label='EMA 200', color='yellow')
+    ax1.axvline(x=200)
     ax1.set_ylabel('Price')
     ax1.legend()
 
@@ -50,8 +52,56 @@ def plot(df):
 
     # Ensure tight layout
     plt.tight_layout()
+    plt.grid()
 
     # Display the plot
     plt.show()
 
     print("Done!\n")
+
+
+def plotPredictionResults(realPrice, prediction, trim):
+    print("Plotting data...")
+
+    # pad the prediction
+    prediction = np.concatenate((np.full(trim, prediction[0]), prediction))
+
+    # Create a figure and multiple subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), sharex="all")
+
+    # Plot the original 'close' price, EMAs, and RSI in the top subplot
+    ax1.plot(realPrice, label='Real price data', color='blue')
+    ax1.axvline(x=trim)
+    ax1.set_ylabel('Price')
+    ax1.grid()
+
+    ax2.plot(prediction, label="predicted % price change", color="black")
+    # ax2.axhline(y=0, color='blue', linestyle='--')
+    ax2.grid()
+
+    plt.tight_layout()
+    plt.show()
+
+    print("Done!\n")
+
+
+def comparePredictionWithTrainData(prediction, trainData):
+    fig, ax1 = plt.subplots()
+
+    color = 'black'
+    ax1.set_xlabel('time (s)')
+    ax1.set_ylabel('Prediction', color=color)
+    ax1.plot(prediction, color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+    ax1.legend()
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color = 'blue'
+    ax2.set_ylabel('yTrain', color=color)  # we already handled the x-label with ax1
+    ax2.plot(trainData, color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+    ax2.legend()
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()

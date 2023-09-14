@@ -55,6 +55,8 @@ def getDf(symbol, start, end, period):
     # slopes
     df['macd_slope'] = df['macd'].diff()
     df['macd_signal_slope'] = df['macd_signal'].diff()
+    # distance
+    df["macd_distance"] = df["macd"] - df["macd_signal"]
 
 
     # RSI

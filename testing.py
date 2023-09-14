@@ -27,6 +27,6 @@ normalized_df = (trainData - minValue) / (maxValue - minValue)
 
 # Check the result
 # print(normalized_values)
-# print(normalized_df)
+# print(normalizedTrainData)
 
 print(normalized_df.loc[4, 'ema_50_slope'].item())

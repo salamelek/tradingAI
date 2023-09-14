@@ -1,3 +1,8 @@
 Inputs:
     Various moving average slopes
     indicators
+
+Output:
+    The output should be only one neuron, from 0 to 1..
+    The important part here, is to not train it to spit out a value from the input, nor a similar one.
+    It should predict how much will the market move up or down > i guess i'll try with %
