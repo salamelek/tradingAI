@@ -1,7 +1,5 @@
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
-from dataGetter import getDf
+from old_shit.dataGetter import getDf
 
 
 df = getDf("NVDA", "2023-08-1", "2023-09-1", "5min")

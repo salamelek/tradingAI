@@ -6,3 +6,20 @@ Output:
     The output should be only one neuron, from 0 to 1..
     The important part here, is to not train it to spit out a value from the input, nor a similar one.
     It should predict how much will the market move up or down > i guess i'll try with %
+
+Try sine indicator
+try RSI + ADX + CCI
+
+
+Q-learning: https://www.youtube.com/watch?v=D9sU1hLT0QY
+    OpenAI gym anytrading
+    Stable base package
+
+
+Also to try nearest neighbour with supervised learning
+
+
+
+Literature:
+    An episode is "a round" (From the beginning to the end of the position)
+    A timeframe is each step (A timeframe on the stock market)
