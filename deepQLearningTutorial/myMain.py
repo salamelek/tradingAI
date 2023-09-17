@@ -1,23 +1,23 @@
-import gym
-from myQLearningPack import Agent
+from myQLearningPack import Agent, TradingEnv
 import numpy as np
-from matplotlib import pyplot as plt
 
 
 if __name__ == '__main__':
-    env = gym.make("LunarLander-v2")
-    agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=4, epsMin=0.01, inputDims=[8], lr=0.001)
+    env = TradingEnv(startBalance=100, endPadding=10, commissionFee=0.01)
+    agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, epsMin=0.01, inputDims=[3], lr=0.001)
     scores, epsHistory = [], []
-    nGames = 1
+    # each episode has its own dataframe
+    # put dataframes in the episodes lis
+    episodes = []
 
-    for i in range(nGames):
+    for i in range(len(episodes)):
         score = 0
         done = False
-        observation, info = env.reset()
+        observation = env.reset(trainData=episodes[i])
 
         while not done:
             action = agent.chooseAction(observation)
-            observation_, reward, done, done2, info = env.step(action)
+            observation_, reward, done, info = env.step(action)
             score += reward
             agent.storeTransition(observation, action, reward, observation_, done)
             agent.learn()
@@ -29,5 +29,3 @@ if __name__ == '__main__':
         avgScore = np.mean(scores[-100:])
 
         print(f"episode {i}: score: {score}, avg score: {avgScore}, epsilon: {agent.epsilon}")
-
-    # x = [i+1 for i in range(nGames)]

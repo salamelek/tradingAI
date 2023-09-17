@@ -6,7 +6,11 @@ import torch as t
 import torch.nn as nn
 import torch.nn.functional as f
 import torch.optim as optim
+
 import numpy as np
+
+from gym import spaces
+import gym
 
 
 class DeepQNetwork(nn.Module):
@@ -50,29 +54,31 @@ class DeepQNetwork(nn.Module):
 
 
 class Agent:
-    def __init__(self, gamma, epsilon, lr, inputDims, batchSize, nActions, maxMemSize=100000, epsEnd=0.01, epsDec=5e-4):
-        self.gamma = gamma                                  # determines the weighting of future rewards
-        self.epsilon = epsilon                              # How much time does the agent use for exploring vs taking the best known action
-        self.lr = lr                                        # Learning rate, to pass into our neural network (?idk what it does?)
-        self.epsEnd = epsEnd                                # I think this is the minimum value of epsilon
-        self.epsDec = epsDec                                # I think this is the value by which epsilon is decremented
-        self.inputDims = inputDims                          # I guess the dimension of the input?
-        self.actionSpace = [i for i in range(nActions)]     # actions represented as ints (easier to randomly pick one)
-        self.maxMemSize = maxMemSize                        # maximum memory allocated
-        self.batchSize = batchSize                          # Batches of memories (???)
-        self.memCounter = 0                                 # keep track of the position of the first available memory to store the agent's memory
+    def __init__(self, gamma, epsilon, lr, inputDims, batchSize, nActions, maxMemSize=100000, epsMin=0.01, epsDec=5e-4):
+        self.gamma = gamma  # determines the weighting of future rewards
+        self.epsilon = epsilon  # How much time does the agent use for exploring vs taking the best known action
+        self.lr = lr  # Learning rate, to pass into our neural network (?idk what it does?)
+        self.epsMin = epsMin  # I think this is the minimum value of epsilon
+        self.epsDec = epsDec  # I think this is the value by which epsilon is decremented
+        self.inputDims = inputDims  # I guess the dimension of the input?
+        self.actionSpace = [i for i in range(nActions)]  # actions represented as ints (easier to randomly pick one)
+        self.maxMemSize = maxMemSize  # maximum memory allocated
+        self.batchSize = batchSize  # Batches of memories (???)
+        self.memCounter = 0  # keep track of the position of the first available memory to store the agent's memory
 
         self.qEval = DeepQNetwork(self.lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
 
         # store memories
-        self.stateMemory = np.zeros((self.maxMemSize, *inputDims), dtype=np.float32)    # always specify the datatype so there is no loss of info
+        self.stateMemory = np.zeros((self.maxMemSize, *inputDims),
+                                    dtype=np.float32)  # always specify the datatype so there is no loss of info
         self.newStateMemory = np.zeros((self.maxMemSize, *inputDims), dtype=np.float32)
         self.actionMemory = np.zeros(self.maxMemSize, dtype=np.int32)
         self.rewardMemory = np.zeros(self.maxMemSize, dtype=np.float32)
-        self.terminalMemory = np.zeros(self.maxMemSize, dtype=np.bool_)  # Idk why its bool_ and not bool maybe here should be bool_ but I have no clue
+        self.terminalMemory = np.zeros(self.maxMemSize,
+                                       dtype=np.bool_)  # Idk why its bool_ and not bool maybe here should be bool_ but I have no clue
 
     def storeTransition(self, state, action, reward, state_, done):
-        index = self.memCounter % self.maxMemSize   # this magically finds where to store the memory
+        index = self.memCounter % self.maxMemSize  # this magically finds where to store the memory
         self.stateMemory[index] = state
         self.newStateMemory[index] = state_
         self.rewardMemory[index] = reward
@@ -130,4 +136,80 @@ class Agent:
         self.qEval.optimiser.step()
 
         # decrease epsilon
-        self.epsilon = self.epsilon - self.epsDec if self.epsilon > self.epsEnd else self.epsEnd
+        self.epsilon = self.epsilon - self.epsDec if self.epsilon > self.epsMin else self.epsMin
+
+
+class TradingEnv(gym.Env):
+    """
+    Tutorial at https://youtu.be/uKnjGn8fF70
+    """
+
+    def __init__(self, startBalance, endPadding, commissionFee):
+        super(TradingEnv, self).__init__()
+        # these things will be initialised in reset()
+        self.trainData = None
+        self.cci = None
+        self.adx = None
+        self.rsi = None
+        self.done = None
+        self.reward = None
+        self.counter = None
+        self.balance = None
+        self.trainData = None
+        self.observation = None
+        self.endPadding = endPadding
+        # starting amount of $
+        self.startBalance = startBalance
+        self.commissionFee = commissionFee
+
+        # buy, sell, hold
+        self.action_space = spaces.Discrete(3)
+        # rsi, adx, cci
+        self.observation_space = spaces.Box(low=-300, high=300, shape=(3,), dtype=np.float32)
+
+    def reset(self, trainData, seed=None, options=None):
+        # "initialise" things here
+        self.counter = 0
+        self.reward = 0
+        self.done = False
+        self.trainData = trainData
+        self.balance = self.startBalance
+
+        self.rsi = self.trainData["rsi"][self.counter]
+        self.adx = self.trainData["adx"][self.counter]
+        self.cci = self.trainData["cci"][self.counter]
+
+        self.observation = np.array([self.rsi, self.adx, self.cci])
+
+        return self.observation
+
+    def step(self, action):
+        # here goes each timeframe action
+        # here goes also all the logic of the trades
+
+        self.counter += 1
+
+        # when it blows the account
+        if self.balance <= 0.0:
+            self.done = True
+
+        # when there are no more candles
+        if self.counter >= (len(self.trainData.index) - self.endPadding):
+            self.done = True
+
+        # set the observation
+        self.rsi = self.trainData["rsi"][self.counter]
+        self.adx = self.trainData["adx"][self.counter]
+        self.cci = self.trainData["cci"][self.counter]
+
+        self.observation = np.array([self.rsi, self.adx, self.cci])
+
+        # calculate reward
+        if self.done:
+            # profit% * 10 + counter, so it encourages to live
+            # TODO could add a punishment for every candle that passed between placed order and fulfilled, to encourage fast positions
+            self.reward = profits * 10 + self.counter
+
+        info = {"earnings": "yes maybe i should implement this so i can see"}
+
+        return self.observation, self.reward, self.done, info

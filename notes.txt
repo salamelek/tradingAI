@@ -23,3 +23,20 @@ Also to try nearest neighbour with supervised learning
 Literature:
     An episode is "a round" (From the beginning to the end of the position)
     A timeframe is each step (A timeframe on the stock market)
+
+
+Reward:
+    1) profitFactor
+    2) earnings% > stop if account is blown
+    3) profitFactor * earnings%
+
+
+working:
+    1) get historical data
+    2) split it into chunks (episodes)
+    3) calculate indicators
+    4) deploy the agent
+        take random action
+        reward will be the profit in %
+        if the account is blown, the reward will be negative
+        end the episode on blown account or on end data
