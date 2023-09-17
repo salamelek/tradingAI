@@ -16,6 +16,7 @@ if __name__ == '__main__':
 
     for i in range(len(episodes)):
         score = 0
+        profits = []
         done = False
         observation = env.reset(trainData=episodes[i])
 
@@ -27,14 +28,17 @@ if __name__ == '__main__':
             agent.learn()
             observation = observation_
 
-            profit = info["profit"]
+            print(f"balance: {info['balance']}\nprofit: {info['profit']}\n")
+
+            profits.append(info["profit"])
 
         scores.append(score)
         epsHistory.append(agent.epsilon)
 
         avgScore = np.mean(scores[-100:])
+        avgProfit = np.mean(profits[-100:])
 
         print(f"episode {i + 1}/{len(episodes)}:\n"
               f"score: {score}, avg score: {avgScore}, epsilon: {agent.epsilon}\n"
-              f"Total profit: {profit}\n"
+              f"Total profits: {sum(profits)}\nAvg profit: {avgProfit}"
               )
