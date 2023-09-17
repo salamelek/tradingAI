@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 
+# TODO add also the ema of the indicators to get past values
 
 stocks = [
     "AAPL",
