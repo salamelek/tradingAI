@@ -1,5 +1,5 @@
 from myQLearningPack import Agent, TradingEnv
-from dataGetter import getTrainData
+from old_shit2.dataGetter import getCsvData
 import numpy as np
 
 
@@ -8,37 +8,32 @@ if __name__ == '__main__':
     agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, epsMin=0.01, inputDims=[3], lr=0.001)
     scores, epsHistory = [], []
 
-    # each episode has its own dataframe
-    # put dataframes in the episodes lis
-    # each episode is 1month of data
-    # each symbol will add 1 month
-    episodes = getTrainData()
+    trainData = getCsvData()
 
-    for i in range(len(episodes)):
-        score = 0
-        profits = []
-        done = False
-        observation = env.reset(trainData=episodes[i])
+    score = 0
+    profits = []
+    done = False
+    observation = env.reset()
 
-        while not done:
-            action = agent.chooseAction(observation)
-            observation_, reward, done, info = env.step(action)
-            score += reward
-            agent.storeTransition(observation, action, reward, observation_, done)
-            agent.learn()
-            observation = observation_
+    while not done:
+        action = agent.chooseAction(observation)
+        observation_, reward, done, info = env.step(action)
+        score += reward
+        agent.storeTransition(observation, action, reward, observation_, done)
+        agent.learn()
+        observation = observation_
 
-            print(f"balance: {info['balance']}\nprofit: {info['profit']}\n")
+        print(f"balance: {info['balance']}\nprofit: {info['profit']}\n")
 
-            profits.append(info["profit"])
+        profits.append(info["profit"])
 
-        scores.append(score)
-        epsHistory.append(agent.epsilon)
+    scores.append(score)
+    epsHistory.append(agent.epsilon)
 
-        avgScore = np.mean(scores[-100:])
-        avgProfit = np.mean(profits[-100:])
+    avgScore = np.mean(scores[-100:])
+    avgProfit = np.mean(profits[-100:])
 
-        print(f"episode {i + 1}/{len(episodes)}:\n"
-              f"score: {score}, avg score: {avgScore}, epsilon: {agent.epsilon}\n"
-              f"Total profits: {sum(profits)}\nAvg profit: {avgProfit}"
-              )
+    print(f"episode {i + 1}/{len(episodes)}:\n"
+          f"score: {score}, avg score: {avgScore}, epsilon: {agent.epsilon}\n"
+          f"Total profits: {sum(profits)}\nAvg profit: {avgProfit}"
+          )

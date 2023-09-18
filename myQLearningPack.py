@@ -144,25 +144,19 @@ class TradingEnv(gym.Env):
     Tutorial at https://youtu.be/uKnjGn8fF70
     """
 
-    def __init__(self, startBalance, endPadding, commissionFee, investmentSize, slTp):
+    def __init__(self, startBalance, commissionFee, investmentSize, slTp, trainData):
         super(TradingEnv, self).__init__()
         # these things will be initialised in reset()
-        self.cci = None
-        self.adx = None
-        self.rsi = None
-        self.done = None
-        self.reward = None
-        self.counter = None
-        self.profits = None
-        self.balance = None
-        self.trainData = None
-        self.trainData = None
+        self.done = False
+        self.reward = 0
+        self.counter = 0
         self.observation = None
         self.tradeProfit = None
-        self.endPadding = endPadding
+        self.cumulativeProfit = 0
+        self.trainData = trainData
 
-        # starting amount of $
-        self.startBalance = startBalance
+        # money stuff
+        self.balance = startBalance
         self.commissionFee = commissionFee
         self.investmentSize = investmentSize    # investment is in % of the current balance
         self.slTp = slTp
@@ -172,20 +166,15 @@ class TradingEnv(gym.Env):
         # rsi, adx, cci
         self.observation_space = spaces.Box(low=-300, high=300, shape=(3,), dtype=np.float32)
 
-    def reset(self, trainData, seed=None, options=None):
-        # "initialise" things here
-        self.counter = 0
-        self.reward = 0
-        self.done = False
-        self.profits = 0
-        self.trainData = trainData
-        self.balance = self.startBalance
+    def reset(self, seed=None, options=None, **kwargs):
+        # since I will not be using episodes, all things are initialised in the __init__() function
+        # IMPORTANT if I end up implementing episodes again, INITIALISE THINGS ON RESET HERE
 
-        self.rsi = self.trainData["rsi"][self.counter]
-        self.adx = self.trainData["adx"][self.counter]
-        self.cci = self.trainData["cci"][self.counter]
-
-        self.observation = np.array([self.rsi, self.adx, self.cci])
+        self.observation = np.array([
+            self.trainData["rsi"][self.counter],
+            self.trainData["adx"][self.counter],
+            self.trainData["cci"][self.counter]
+        ])
 
         return self.observation
 
@@ -206,25 +195,29 @@ class TradingEnv(gym.Env):
 
         # set the next observation
         self.counter += 1
-        self.rsi = self.trainData["rsi"][self.counter]
-        self.adx = self.trainData["adx"][self.counter]
-        self.cci = self.trainData["cci"][self.counter]
 
-        self.observation = np.array([self.rsi, self.adx, self.cci])
+        self.observation = np.array([
+            self.trainData["rsi"][self.counter],
+            self.trainData["adx"][self.counter],
+            self.trainData["cci"][self.counter]
+        ])
 
-        info = {
-            "balance": self.balance,
-            "profit": self.tradeProfit,
-            "action": action
-        }
+        # set reward
+        self.reward = 0
 
         # check if it's done
         if self.balance < 50.0:
             # when it blows the account
             self.done = True
 
-        if self.counter >= (len(self.trainData.index) - self.endPadding):
+        if self.counter >= (len(self.trainData.index)):
             # when there are no more candles
             self.done = True
+
+        info = {
+            "balance": self.balance,
+            "profit": self.tradeProfit,
+            "action": action
+        }
 
         return self.observation, self.reward, self.done, info

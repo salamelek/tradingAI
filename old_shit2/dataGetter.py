@@ -2,8 +2,11 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+import csv
 
 # TODO add also the ema of the indicators to get past values
+# TODO get better values
+# TODO make this module more modular (can choose sign, timeframe and shit)
 
 stocks = [
     "AAPL",
@@ -32,9 +35,6 @@ stocks = [
     # "GLPI",
     # "FNF"
 ]
-
-# yahoofinance only allows 60 days
-monthsPerSymbol = 1
 
 
 def ADX(data: pd.DataFrame, period: int):
@@ -86,11 +86,16 @@ def ADX(data: pd.DataFrame, period: int):
     return df
 
 
+def calculate_mad(arr):
+    # use this shit because pandas .mad() is deprecated :(
+    return np.mean(np.abs(arr - np.mean(arr)))
+
+
 # Commodity Channel Index
 def CCI(df, nDays):
     df['TP'] = (df['high'] + df['low'] + df['close']) / 3
     df['sma'] = df['TP'].rolling(nDays).mean()
-    df['mad'] = df['TP'].rolling(nDays).apply(lambda x: pd.Series(x).mad())
+    df['mad'] = df['TP'].rolling(nDays).apply(calculate_mad)
     df['cci'] = (df['TP'] - df['sma']) / (0.015 * df['mad'])
 
     del df['TP'], df['sma'], df['mad']
@@ -98,60 +103,65 @@ def CCI(df, nDays):
     return df
 
 
-def getTrainData():
-    print("Getting train data...")
+def getYfData():
+    print("Getting train df...")
 
-    trainData = []
-    for stock in stocks:
-        df = yf.download(stock, interval="5m", start="2023-08-01", end="2023-09-01")
+    df = yf.download(stocks[0], interval="5m", start="2023-08-01", end="2023-09-01")
 
-        pd.options.display.max_columns = None
-        pd.options.display.max_rows = None
+    pd.options.display.max_columns = None
+    pd.options.display.max_rows = None
 
-        df = df.drop(["Open", "Adj Close"], axis=1)
-        df = df.rename(columns={'Close': 'close', "High": "high", "Low": "low", "Volume": "volume"})
+    df = df.drop(["Open", "Adj Close"], axis=1)
+    df = df.rename(columns={'Close': 'close', "High": "high", "Low": "low", "Volume": "volume"})
 
-        # calculate indicators
-        # rsi
-        # Calculate the price changes (daily close price - previous day's close price)
-        rsiPeriod = 14
-        df["price_change"] = df["close"].diff()
-        # Calculate the gain and loss for each day
-        df["gain"] = df["price_change"].apply(lambda x: x if x > 0 else 0)
-        df["loss"] = df["price_change"].apply(lambda x: -x if x < 0 else 0)
-        # Calculate the average gain and average loss over the RSI period
-        df["avg_gain"] = df["gain"].rolling(window=rsiPeriod).mean()
-        df["avg_loss"] = df["loss"].rolling(window=rsiPeriod).mean()
-        # Calculate the relative strength (RS) and RSI
-        df["rs"] = df["avg_gain"] / df["avg_loss"]
-        df["rsi"] = 100 - (100 / (1 + df["rs"]))
-        # cleanup
-        df = df.drop(["rs", "avg_loss", "avg_gain", "loss", "gain", "price_change"], axis=1)
+    # calculate indicators
+    # rsi
+    # Calculate the price changes (daily close price - previous day's close price)
+    rsiPeriod = 14
+    df["price_change"] = df["close"].diff()
+    # Calculate the gain and loss for each day
+    df["gain"] = df["price_change"].apply(lambda x: x if x > 0 else 0)
+    df["loss"] = df["price_change"].apply(lambda x: -x if x < 0 else 0)
+    # Calculate the average gain and average loss over the RSI period
+    df["avg_gain"] = df["gain"].rolling(window=rsiPeriod).mean()
+    df["avg_loss"] = df["loss"].rolling(window=rsiPeriod).mean()
+    # Calculate the relative strength (RS) and RSI
+    df["rs"] = df["avg_gain"] / df["avg_loss"]
+    df["rsi"] = 100 - (100 / (1 + df["rs"]))
+    # cleanup
+    df = df.drop(["rs", "avg_loss", "avg_gain", "loss", "gain", "price_change"], axis=1)
 
-        # adx
-        adxPeriod = 14
-        df = ADX(df, adxPeriod)
+    # adx
+    adxPeriod = 14
+    df = ADX(df, adxPeriod)
 
-        # cci
-        cciPeriod = 20
-        df = CCI(df, cciPeriod)
+    # cci
+    cciPeriod = 20
+    df = CCI(df, cciPeriod)
 
-        # drop Nan rows
-        df = df.dropna()
+    # drop Nan rows
+    df = df.dropna()
 
-        # add indexes
-        df['index'] = range(len(df))
+    # add indexes
+    df['index'] = range(len(df))
 
-        trainData.append(df)
+    print()
 
-        print()
-
-    return trainData
+    return df
 
 
-# df = getTrainData()[0]
-# plt.plot(df["close"])
-# plt.show()
+def getCsvData():
+    # https://www.binance.com/en/landing/data
+
+    df = pd.read_csv('../tradingData/BTCUSDT/BTCUSDT-5m-2022-11.csv', header=None, usecols=[0, 1, 2, 3, 4])
+    df.columns = ["startTime", "open", "high", "low", "close"]
+
+
+
+
+df = getYfData()[0]
+plt.plot(df["close"])
+plt.show()
 #
 # print(df["high"])
 #

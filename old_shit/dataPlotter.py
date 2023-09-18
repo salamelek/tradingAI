@@ -5,7 +5,7 @@ import numpy as np
 
 
 def plot(df):
-    print("Plotting data...")
+    print("Plotting df...")
 
     # Create a figure and multiple subplots
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(16, 10), sharex="all")
@@ -60,7 +60,7 @@ def plot(df):
 
 
 def plotPredictionResults(realPrice, prediction, trim):
-    print("Plotting data...")
+    print("Plotting df...")
 
     # pad the prediction
     prediction = np.concatenate((np.full(trim, prediction[0]), prediction))
@@ -69,7 +69,7 @@ def plotPredictionResults(realPrice, prediction, trim):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), sharex="all")
 
     # Plot the original 'close' price, EMAs, and RSI in the top subplot
-    ax1.plot(realPrice, label='Real price data', color='blue')
+    ax1.plot(realPrice, label='Real price df', color='blue')
     ax1.axvline(x=trim)
     ax1.set_ylabel('Price')
     ax1.grid()

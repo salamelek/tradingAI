@@ -25,12 +25,12 @@ def step(self, action):
 
         # profit
         if closestLowIndex > closestHighIndex:
-            self.profits += self.profit
+            self.cumulativeProfit += self.profit
             self.balance += self.profit
 
         # loss
         elif closestLowIndex < closestHighIndex:
-            self.profits -= self.profit
+            self.cumulativeProfit -= self.profit
             self.balance -= self.profit
 
     # sell
@@ -53,12 +53,12 @@ def step(self, action):
 
         # profit
         if closestLowIndex < closestHighIndex:
-            self.profits += self.profit
+            self.cumulativeProfit += self.profit
             self.balance += self.profit
 
         # loss
         elif closestLowIndex > closestHighIndex:
-            self.profits -= self.profit
+            self.cumulativeProfit -= self.profit
             self.balance -= self.profit
 
     # hold

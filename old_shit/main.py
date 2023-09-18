@@ -19,7 +19,7 @@ df = getDf("NVDA", "2023-01-1", "2023-04-1", "5min")
 
 # must be a df row of all the inputs
 # ema 5, 50, 100, 200 slope, macd slope and signal slope, macd distance, rsi
-# get the useful data
+# get the useful df
 
 trainData = pd.DataFrame(
     {
@@ -63,7 +63,7 @@ for index, row in normalizedTrainData.iterrows():
     if trimNValues < float(index) < (len(df.index) - 1):
         # append inputs
         xTrain.append(list(row))
-        # The train data should be growth %
+        # The train df should be growth %
         closePrice = df.loc[index, 'close'].item()
         nextClose = df.loc[index + 1, 'close'].item()
         yTrain.append((nextClose - closePrice) / closePrice)
@@ -76,7 +76,7 @@ for index, row in normalizedTrainData.iterrows():
 print(yTrain[1220])
 
 
-# Convert training data to np arrays
+# Convert training df to np arrays
 xTrain, yTrain = np.array(xTrain), np.array(yTrain)
 # I don't think I have to reshape this, so it's commented out
 # xTrain = np.reshape(xTrain, (xTrain.shape[0], xTrain.shape[1], 1))

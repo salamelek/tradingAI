@@ -4,10 +4,10 @@ import requests
 
 
 def getDf(symbol, start, end, period):
-    print("Getting data...")
+    print("Getting df...")
     os.environ["TIINGO_API_KEY"] = "c18a43200a4dde2d36f4a4986bd03bb70d92fd4d"
 
-    # Define the Tiingo API endpoint for 5-minute data
+    # Define the Tiingo API endpoint for 5-minute df
     url = f"https://api.tiingo.com/iex/{symbol}/prices"
 
     # Define the API parameters including the date range
@@ -29,7 +29,7 @@ def getDf(symbol, start, end, period):
     data = response.json()
     df = pd.DataFrame(data)
 
-    # drop useless data
+    # drop useless df
     df = df.drop('open', axis=1)
     df = df.drop('high', axis=1)
     df = df.drop('low', axis=1)

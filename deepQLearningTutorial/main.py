@@ -1,8 +1,6 @@
 import gym
 from myQLearningPack import Agent
 import numpy as np
-from matplotlib import pyplot as plt
-
 
 if __name__ == '__main__':
     env = gym.make("LunarLander-v2")
@@ -29,5 +27,3 @@ if __name__ == '__main__':
         avgScore = np.mean(scores[-100:])
 
         print(f"episode {i}: score: {score}, avg score: {avgScore}, epsilon: {agent.epsilon}")
-
-    # x = [i+1 for i in range(nGames)]
