@@ -8,9 +8,42 @@ import torch.nn.functional as f
 import torch.optim as optim
 
 import numpy as np
+import random
 
 from gym import spaces
 import gym
+
+
+def calcPosition(df, entryPrice, slTp, currentPos):
+    try:
+        highExitIndex = min(df[(df["high"] > (entryPrice + entryPrice * slTp)) & (df["index"] > currentPos)]["index"])
+    except ValueError:
+        highExitIndex = np.inf
+
+    try:
+        lowExitIndex = min(df[(df["low"] < (entryPrice - entryPrice * slTp)) & (df["index"] > currentPos)]["index"])
+    except ValueError:
+        lowExitIndex = np.inf
+
+    if highExitIndex == lowExitIndex == np.inf:
+        return None, None
+
+    if highExitIndex < lowExitIndex:
+        # the position concluded above
+        exitPrice = entryPrice + entryPrice * slTp
+
+    elif lowExitIndex < highExitIndex:
+        # the position concluded below
+        exitPrice = entryPrice - entryPrice * slTp
+
+    else:
+        # a candle that goes from +1% to -1%
+        # randomly selects an option
+        exitPrice = entryPrice + (entryPrice * slTp * random.choice([1, -1]))
+
+    candlesToExit = min(highExitIndex, lowExitIndex) - currentPos
+
+    return exitPrice, candlesToExit
 
 
 class DeepQNetwork(nn.Module):
@@ -34,10 +67,10 @@ class DeepQNetwork(nn.Module):
         # try using a GPU
         print("Trying to use GPU..")
         if t.cuda.is_available():
-            print("Successfully using GPU!")
+            print("Successfully using GPU!\n")
             self.device = t.device("cuda:0")
         else:
-            print("Nope, using cpu")
+            print("Nope, using cpu\n")
             self.device = t.device("cpu")
         self.to(self.device)
 
@@ -61,12 +94,13 @@ class Agent:
         self.epsMin = epsMin  # I think this is the minimum value of epsilon
         self.epsDec = epsDec  # I think this is the value by which epsilon is decremented
         self.inputDims = inputDims  # I guess the dimension of the input?
-        self.actionSpace = [i for i in range(nActions)]  # actions represented as ints (easier to randomly pick one)
+        self.actionSpace = [i for i in range(nActions)]  # nActions represented as ints (easier to randomly pick one)
         self.maxMemSize = maxMemSize  # maximum memory allocated
         self.batchSize = batchSize  # Batches of memories (???)
         self.memCounter = 0  # keep track of the position of the first available memory to store the agent's memory
 
-        self.qEval = DeepQNetwork(self.lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
+        # in the tutorial it's called qEval instead of model
+        self.model = DeepQNetwork(self.lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
 
         # store memories
         self.stateMemory = np.zeros((self.maxMemSize, *inputDims),
@@ -94,9 +128,9 @@ class Agent:
             # Convert the list of NumPy arrays to a single NumPy array
             state_np = np.array([observation])
             # Convert the NumPy array to a PyTorch tensor
-            state = t.tensor(state_np, dtype=t.float32).to(self.qEval.device)
+            state = t.tensor(state_np, dtype=t.float32).to(self.model.device)
 
-            actions = self.qEval.forward(state)
+            actions = self.model.forward(state)
             action = t.argmax(actions).item()
 
         else:
@@ -110,30 +144,30 @@ class Agent:
         if self.memCounter < self.batchSize:
             return
 
-        self.qEval.optimiser.zero_grad()
+        self.model.optimiser.zero_grad()
 
         maxMem = min(self.memCounter, self.maxMemSize)
         batch = np.random.choice(maxMem, self.batchSize, replace=False)
 
         batchIndex = np.arange(self.batchSize, dtype=np.int32)
 
-        stateBatch = t.tensor(self.stateMemory[batch]).to(self.qEval.device)
-        newStateBatch = t.tensor(self.newStateMemory[batch]).to(self.qEval.device)
-        rewardBatch = t.tensor(self.rewardMemory[batch]).to(self.qEval.device)
-        terminalBatch = t.tensor(self.terminalMemory[batch]).to(self.qEval.device)
+        stateBatch = t.tensor(self.stateMemory[batch]).to(self.model.device)
+        newStateBatch = t.tensor(self.newStateMemory[batch]).to(self.model.device)
+        rewardBatch = t.tensor(self.rewardMemory[batch]).to(self.model.device)
+        terminalBatch = t.tensor(self.terminalMemory[batch]).to(self.model.device)
 
         actionBatch = self.actionMemory[batch]
 
-        # select maximal actions
-        qEval = self.qEval.forward(stateBatch)[batchIndex, actionBatch]
-        qNext = self.qEval.forward(newStateBatch)
+        # select maximal nActions
+        qEval = self.model.forward(stateBatch)[batchIndex, actionBatch]
+        qNext = self.model.forward(newStateBatch)
         qNext[terminalBatch] = 0.0
 
         qTarget = rewardBatch + self.gamma * t.max(qNext, dim=1)[0]
 
-        loss = self.qEval.loss(qTarget, qEval).to(self.qEval.device)
+        loss = self.model.loss(qTarget, qEval).to(self.model.device)
         loss.backward()
-        self.qEval.optimiser.step()
+        self.model.optimiser.step()
 
         # decrease epsilon
         self.epsilon = self.epsilon - self.epsDec if self.epsilon > self.epsMin else self.epsMin
@@ -151,12 +185,13 @@ class TradingEnv(gym.Env):
         self.reward = 0
         self.counter = 0
         self.observation = None
-        self.tradeProfit = None
+        self.tradeProfit = 0
         self.cumulativeProfit = 0
         self.trainData = trainData
 
         # money stuff
-        self.balance = startBalance
+        self.startBalance = startBalance
+        self.balance = self.startBalance
         self.commissionFee = commissionFee
         self.investmentSize = investmentSize    # investment is in % of the current balance
         self.slTp = slTp
@@ -169,6 +204,10 @@ class TradingEnv(gym.Env):
     def reset(self, seed=None, options=None, **kwargs):
         # since I will not be using episodes, all things are initialised in the __init__() function
         # IMPORTANT if I end up implementing episodes again, INITIALISE THINGS ON RESET HERE
+        self.done = False
+        self.counter = 0
+        self.cumulativeProfit = 0
+        self.balance = self.startBalance
 
         self.observation = np.array([
             self.trainData["rsi"][self.counter],
@@ -179,19 +218,39 @@ class TradingEnv(gym.Env):
         return self.observation
 
     def step(self, action):
+        # stuff to reset each step
         self.tradeProfit = 0
+        self.reward = 0
+
+        # trading logic
+        entryPrice = self.trainData["open"][self.counter]
+        exitPrice, candlesToExit = calcPosition(self.trainData, entryPrice, self.slTp, self.counter)
 
         if action == 0:
             # buy
-            pass
-
+            try:
+                self.tradeProfit = (exitPrice - entryPrice) / entryPrice
+            except TypeError:
+                # no enough data to continue
+                pass
         elif action == 1:
             # sell
-            pass
+            try:
+                self.tradeProfit = (entryPrice - exitPrice) / entryPrice
+            except TypeError:
+                # no enough data to continue
+                pass
 
         # hold
         elif action == 2:
+            # add some reward to maybe get some hold action?
+            # self.reward += 1
+            # it's commented out since I will apply commissions
             pass
+
+        # count the money
+        self.cumulativeProfit += self.tradeProfit
+        self.balance += self.tradeProfit * (self.balance * self.investmentSize)
 
         # set the next observation
         self.counter += 1
@@ -203,21 +262,26 @@ class TradingEnv(gym.Env):
         ])
 
         # set reward
-        self.reward = 0
+        self.reward += self.tradeProfit
 
         # check if it's done
         if self.balance < 50.0:
+            print(f"Done because of balance: {self.balance}\n")
             # when it blows the account
             self.done = True
 
-        if self.counter >= (len(self.trainData.index)):
+        if self.counter >= max(self.trainData["index"]):
+            print(f"Done because of ending bars: {max(self.trainData['index'])}\n")
             # when there are no more candles
             self.done = True
 
+        # write some info
         info = {
-            "balance": self.balance,
-            "profit": self.tradeProfit,
-            "action": action
+            "cumulativeProfit": self.cumulativeProfit,
+            "tradeProfit": self.tradeProfit,
+            # set the counter to -1 because the action happened that time
+            "action": (action, self.counter - 1),
+            "balance": self.balance
         }
 
         return self.observation, self.reward, self.done, info

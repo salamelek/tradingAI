@@ -124,5 +124,7 @@ def getData():
 
     # add indexes
     df['index'] = range(len(df))
+    # reset index
+    df = df.reset_index(drop=True)
 
     return df

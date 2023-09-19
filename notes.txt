@@ -40,3 +40,7 @@ working:
         reward will be the profit in %
         if the account is blown, the reward will be negative
         end the episode on blown account or on end data
+
+
+Concept:
+    the env places a default position on every candle and the AI learns to shut them down when shit and tune sl:tp ratio, as well as size

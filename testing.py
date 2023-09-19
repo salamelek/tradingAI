@@ -1,30 +1,15 @@
-import pandas as pd
-from old_shit.dataGetter import getDf
+import time
+import sys
 
 
-df = getDf("NVDA", "2023-08-1", "2023-09-1", "5min")
+def print_bar(progress, iterLen, length=50, fill='█', prefix=''):
+    ratio = iterLen / length
+    barProg = int(progress / ratio)
+    bar = fill * barProg + '-' * int(length - barProg)
+    sys.stdout.write(f'\r{prefix} |{bar}| {round(((progress / iterLen) * 100), 1)}% Complete')
+    sys.stdout.flush()
 
-trainData = pd.DataFrame(
-    {
-        "ema_5_slope": df["EMA_5_SLOPE"],
-        "ema_50_slope": df["EMA_50_SLOPE"],
-        "ema_100_slope": df["EMA_100_SLOPE"],
-        "ema_200_slope": df["EMA_200_SLOPE"],
-        "macd_slope": df["macd_slope"],
-        "macd_signal_slope": df["macd_signal_slope"],
-        "macd_distance": 0,
-        "rsi": df["rsi"]
-    }
-)
 
-# print(trainData)
-
-minValue = -100
-maxValue = 100
-normalized_df = (trainData - minValue) / (maxValue - minValue)
-
-# Check the result
-# print(normalized_values)
-# print(normalizedTrainData)
-
-print(normalized_df.loc[4, 'ema_50_slope'].item())
+for i in range(100):
+    print_bar(i + 1, 100)
+    time.sleep(0.1)
