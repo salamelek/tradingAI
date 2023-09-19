@@ -88,28 +88,26 @@ class DeepQNetwork(nn.Module):
 
 class Agent:
     def __init__(self, gamma, epsilon, lr, inputDims, batchSize, nActions, maxMemSize=100000, epsMin=0.01, epsDec=5e-4):
-        self.gamma = gamma  # determines the weighting of future rewards
-        self.epsilon = epsilon  # How much time does the agent use for exploring vs taking the best known action
-        self.lr = lr  # Learning rate, to pass into our neural network (?idk what it does?)
-        self.epsMin = epsMin  # I think this is the minimum value of epsilon
-        self.epsDec = epsDec  # I think this is the value by which epsilon is decremented
-        self.inputDims = inputDims  # I guess the dimension of the input?
-        self.actionSpace = [i for i in range(nActions)]  # nActions represented as ints (easier to randomly pick one)
-        self.maxMemSize = maxMemSize  # maximum memory allocated
-        self.batchSize = batchSize  # Batches of memories (???)
-        self.memCounter = 0  # keep track of the position of the first available memory to store the agent's memory
+        self.gamma = gamma                                  # determines the weighting of future rewards
+        self.epsilon = epsilon                              # How much time does the agent use for exploring vs taking the best known action
+        self.lr = lr                                        # Learning rate, to pass into our neural network (?idk what it does?)
+        self.epsMin = epsMin                                # I think this is the minimum value of epsilon
+        self.epsDec = epsDec                                # I think this is the value by which epsilon is decremented
+        self.inputDims = inputDims                          # I guess the dimension of the input?
+        self.actionSpace = [i for i in range(nActions)]     # nActions represented as ints (easier to randomly pick one)
+        self.maxMemSize = maxMemSize                        # maximum memory allocated
+        self.batchSize = batchSize                          # Batches of memories (???)
+        self.memCounter = 0                                 # keep track of the position of the first available memory to store the agent's memory
 
         # in the tutorial it's called qEval instead of model
         self.model = DeepQNetwork(self.lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
 
         # store memories
-        self.stateMemory = np.zeros((self.maxMemSize, *inputDims),
-                                    dtype=np.float32)  # always specify the datatype so there is no loss of info
+        self.stateMemory = np.zeros((self.maxMemSize, *inputDims), dtype=np.float32)  # always specify the datatype so there is no loss of info
         self.newStateMemory = np.zeros((self.maxMemSize, *inputDims), dtype=np.float32)
         self.actionMemory = np.zeros(self.maxMemSize, dtype=np.int32)
         self.rewardMemory = np.zeros(self.maxMemSize, dtype=np.float32)
-        self.terminalMemory = np.zeros(self.maxMemSize,
-                                       dtype=np.bool_)  # Idk why its bool_ and not bool maybe here should be bool_ but I have no clue
+        self.terminalMemory = np.zeros(self.maxMemSize, dtype=np.bool_)
 
     def storeTransition(self, state, action, reward, state_, done):
         index = self.memCounter % self.maxMemSize  # this magically finds where to store the memory
@@ -243,14 +241,15 @@ class TradingEnv(gym.Env):
 
         # hold
         elif action == 2:
-            # add some reward to maybe get some hold action?
-            # self.reward += 1
-            # it's commented out since I will apply commissions
-            pass
+            # hold
+            self.reward += 1000
 
         # count the money
+        feeAmount = self.balance * self.investmentSize * self.commissionFee
+        self.tradeProfit -= feeAmount
         self.cumulativeProfit += self.tradeProfit
-        self.balance += self.tradeProfit * (self.balance * self.investmentSize)
+        profit = self.tradeProfit * (self.balance * self.investmentSize)
+        self.balance += profit
 
         # set the next observation
         self.counter += 1
@@ -265,7 +264,7 @@ class TradingEnv(gym.Env):
         self.reward += self.tradeProfit
 
         # check if it's done
-        if self.balance < 50.0:
+        if self.balance < 0.0:
             print(f"Done because of balance: {self.balance}\n")
             # when it blows the account
             self.done = True
@@ -280,7 +279,7 @@ class TradingEnv(gym.Env):
             "cumulativeProfit": self.cumulativeProfit,
             "tradeProfit": self.tradeProfit,
             # set the counter to -1 because the action happened that time
-            "action": (action, self.counter - 1),
+            "position": (action, self.counter - 1),
             "balance": self.balance
         }
 
