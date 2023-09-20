@@ -186,6 +186,7 @@ class TradingEnv(gym.Env):
         self.tradeProfit = 0
         self.cumulativeProfit = 0
         self.trainData = trainData
+        self.buyCount, self.sellCount, self.holdCount = 0, 0, 0
 
         # money stuff
         self.startBalance = startBalance
@@ -220,6 +221,8 @@ class TradingEnv(gym.Env):
         # stuff to reset each step
         self.tradeProfit = 0
         self.reward = 0
+        # start balance is reset every time, so I can train it based on net profit
+        self.balance = self.startBalance
 
         # trading logic
         entryPrice = self.trainData["open"][self.counter]
@@ -250,8 +253,8 @@ class TradingEnv(gym.Env):
 
         # count the money
         self.cumulativeProfit += self.tradeProfit
-        profit = self.tradeProfit * self.balance * self.investmentSize - (self.balance * self.investmentSize * self.commissionFee)
-        self.balance += profit
+        netProfit = self.tradeProfit * ((self.balance * self.investmentSize) - (self.balance * self.investmentSize * self.commissionFee))
+        self.balance += netProfit
 
         # set the next observation
         self.counter += 1
@@ -263,7 +266,8 @@ class TradingEnv(gym.Env):
         ])
 
         # set reward
-        self.reward += self.tradeProfit
+        # self.reward += candlesToExit / netProfit
+        self.reward += netProfit
 
         # check if it's done
         if self.balance < 0.0:

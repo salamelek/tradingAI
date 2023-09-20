@@ -12,7 +12,7 @@ if __name__ == '__main__':
     trainData = getData()
     print("Done!\n")
 
-    env = TradingEnv(trainData=trainData, startBalance=100, commissionFee=0.01, investmentSize=1.0, slTp=0.05)
+    env = TradingEnv(trainData=trainData, startBalance=100, commissionFee=0.0025, investmentSize=1.0, slTp=0.01)
     agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[3], epsMin=0.01, lr=0.001)
 
     listCumProfits = []
@@ -47,6 +47,7 @@ if __name__ == '__main__':
 
         listCumProfits.append(cumulativeProfitValues)
 
+    print()
     print(f"End balance: {info['balance']}")
     print(f"Number buys: {(info['counts'][0])}")
     print(f"Number sells: {(info['counts'][1])}")
@@ -56,9 +57,11 @@ if __name__ == '__main__':
 
     # Plot the original 'close' price, EMAs, and RSI in the top subplot
     ax1.plot(listCumProfits[retries - 1], label='Cum. profits', color='blue')
+    ax1.set_ylabel('Cum. profits')
     ax1.grid()
 
     ax2.plot(rewards, label="rewards", color="black")
+    ax2.set_ylabel('Rewards')
     ax2.grid()
 
     plt.tight_layout()

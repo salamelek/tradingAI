@@ -104,7 +104,7 @@ def getDataFromCsv():
             dfMerged = prevDf.merge(dfMerged, how="outer")
         prevDf = dfMerged
 
-    dfMerged = pd.read_csv(f'./tradingData/BTCUSDT/BTCUSDT-5m-2023-08.csv', header=None, usecols=[0, 1, 2, 3, 4])
+    # dfMerged = pd.read_csv(f'./tradingData/BTCUSDT/BTCUSDT-5m-2023-08.csv', header=None, usecols=[0, 1, 2, 3, 4])
     dfMerged.columns = ["startTime", "open", "high", "low", "close"]
 
     return dfMerged

@@ -1,15 +1,8 @@
-import time
-import sys
+tradeProfit = 0.01
+balance = 100
+investmentSize = 0.01
+commissionFee = 0.01
 
+netProfit = tradeProfit * ((balance * investmentSize) - (balance * investmentSize * commissionFee))
 
-def print_bar(progress, iterLen, length=50, fill='█', prefix=''):
-    ratio = iterLen / length
-    barProg = int(progress / ratio)
-    bar = fill * barProg + '-' * int(length - barProg)
-    sys.stdout.write(f'\r{prefix} |{bar}| {round(((progress / iterLen) * 100), 1)}% Complete')
-    sys.stdout.flush()
-
-
-for i in range(100):
-    print_bar(i + 1, 100)
-    time.sleep(0.1)
+print(netProfit)
