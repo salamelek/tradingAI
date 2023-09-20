@@ -206,6 +206,7 @@ class TradingEnv(gym.Env):
         self.counter = 0
         self.cumulativeProfit = 0
         self.balance = self.startBalance
+        self.buyCount, self.sellCount, self.holdCount = 0, 0, 0
 
         self.observation = np.array([
             self.trainData["rsi"][self.counter],
@@ -226,6 +227,7 @@ class TradingEnv(gym.Env):
 
         if action == 0:
             # buy
+            self.buyCount += 1
             try:
                 self.tradeProfit = (exitPrice - entryPrice) / entryPrice
             except TypeError:
@@ -233,6 +235,7 @@ class TradingEnv(gym.Env):
                 pass
         elif action == 1:
             # sell
+            self.sellCount += 1
             try:
                 self.tradeProfit = (entryPrice - exitPrice) / entryPrice
             except TypeError:
@@ -242,13 +245,12 @@ class TradingEnv(gym.Env):
         # hold
         elif action == 2:
             # hold
-            self.reward += 1000
+            self.holdCount += 1
+            self.reward += 0
 
         # count the money
-        feeAmount = self.balance * self.investmentSize * self.commissionFee
-        self.tradeProfit -= feeAmount
         self.cumulativeProfit += self.tradeProfit
-        profit = self.tradeProfit * (self.balance * self.investmentSize)
+        profit = self.tradeProfit * self.balance * self.investmentSize - (self.balance * self.investmentSize * self.commissionFee)
         self.balance += profit
 
         # set the next observation
@@ -265,12 +267,12 @@ class TradingEnv(gym.Env):
 
         # check if it's done
         if self.balance < 0.0:
-            print(f"Done because of balance: {self.balance}\n")
+            print(f"\nDone because of balance: {self.balance}\n")
             # when it blows the account
             self.done = True
 
         if self.counter >= max(self.trainData["index"]):
-            print(f"Done because of ending bars: {max(self.trainData['index'])}\n")
+            print(f"\nDone because of ending bars: {max(self.trainData['index'])}\n")
             # when there are no more candles
             self.done = True
 
@@ -280,7 +282,8 @@ class TradingEnv(gym.Env):
             "tradeProfit": self.tradeProfit,
             # set the counter to -1 because the action happened that time
             "position": (action, self.counter - 1),
-            "balance": self.balance
+            "balance": self.balance,
+            "counts": (self.buyCount, self.sellCount, self.holdCount)
         }
 
         return self.observation, self.reward, self.done, info

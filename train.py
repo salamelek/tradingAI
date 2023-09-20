@@ -12,15 +12,14 @@ if __name__ == '__main__':
     trainData = getData()
     print("Done!\n")
 
-    env = TradingEnv(trainData=trainData, startBalance=100, commissionFee=0.01, investmentSize=1.0, slTp=0.01)
+    env = TradingEnv(trainData=trainData, startBalance=100, commissionFee=0.01, investmentSize=1.0, slTp=0.05)
     agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[3], epsMin=0.01, lr=0.001)
 
-    totRowsNum = len(trainData.index)
-
     listCumProfits = []
-    retries = 1
+    retries = 5
 
     for i in range(retries):
+        totRowsNum = len(trainData.index)
         counter = 0
         done = False
         observation = env.reset()
@@ -44,15 +43,26 @@ if __name__ == '__main__':
             counter += 1
 
             # print something
-            progressBar(counter + 1, totRowsNum, "Training progress:")
+            progressBar(counter + 2, totRowsNum, "Training progress:")
 
         listCumProfits.append(cumulativeProfitValues)
 
-    plt.plot(listCumProfits[retries - 1])
-    plt.plot(rewards)
-    plt.show()
-
     print(f"End balance: {info['balance']}")
+    print(f"Number buys: {(info['counts'][0])}")
+    print(f"Number sells: {(info['counts'][1])}")
+    print(f"Number holds: {(info['counts'][2])}")
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), sharex="all")
+
+    # Plot the original 'close' price, EMAs, and RSI in the top subplot
+    ax1.plot(listCumProfits[retries - 1], label='Cum. profits', color='blue')
+    ax1.grid()
+
+    ax2.plot(rewards, label="rewards", color="black")
+    ax2.grid()
+
+    plt.tight_layout()
+    plt.show()
 
     # save agent
     if input("Do you want to save this model? [y/n]:\n") != "n":

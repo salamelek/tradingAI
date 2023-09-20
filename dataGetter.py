@@ -97,10 +97,17 @@ def getDataFromYf():
 
 
 def getDataFromCsv():
-    df = pd.read_csv('./tradingData/BTCUSDT/BTCUSDT-5m-2022-11.csv', header=None, usecols=[0, 1, 2, 3, 4])
-    df.columns = ["startTime", "open", "high", "low", "close"]
+    # append the CSV files
+    for i in range(3):
+        dfMerged = pd.read_csv(f'./tradingData/BTCUSDT/BTCUSDT-5m-2023-0{i + 6}.csv', header=None, usecols=[0, 1, 2, 3, 4])
+        if i > 0:
+            dfMerged = prevDf.merge(dfMerged, how="outer")
+        prevDf = dfMerged
 
-    return df
+    dfMerged = pd.read_csv(f'./tradingData/BTCUSDT/BTCUSDT-5m-2023-08.csv', header=None, usecols=[0, 1, 2, 3, 4])
+    dfMerged.columns = ["startTime", "open", "high", "low", "close"]
+
+    return dfMerged
 
 
 def getData():

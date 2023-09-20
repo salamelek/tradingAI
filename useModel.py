@@ -11,7 +11,7 @@ nActions = 3
 inputDims = [3]
 
 model = DeepQNetwork(lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
-model.load_state_dict(t.load("savedModels/firstTimeWithFees.pth"))
+model.load_state_dict(t.load("savedModels/3M_10gen.pth"))
 
 print("Getting data...")
 trainData = getData()
@@ -27,7 +27,7 @@ balance = 100
 investmentSize = 0.01
 commissionFee = 0.01
 
-cumProfits = []
+cumProfits, profits = [], []
 
 
 # Forward pass (inference) to get predictions
@@ -64,17 +64,20 @@ with t.no_grad():
             tradeProfit = 0
 
         cumulativeProfit += tradeProfit
-        grossProfit = tradeProfit * (balance * investmentSize)
+        grossProfit = tradeProfit * balance * investmentSize
+        # FIXME this commission doesn't allow any profits
         netProfit = grossProfit - (balance * investmentSize * commissionFee)
         balance += netProfit
 
         cumProfits.append(cumulativeProfit)
+        profits.append(netProfit)
 
         # print something
         progressBar(i + 1, totRowsNum, "Calculating...")
 
     print()
-    print(balance)
+    print(f"balance: {balance}")
 
-    plt.plot(cumProfits)
+    # plt.plot(cumProfits)
+    plt.plot(profits)
     plt.show()
