@@ -275,7 +275,6 @@ class TradingEnv(gym.Env):
 
         # set reward
         # self.reward += candlesToExit / netProfit
-
         if candlesToExit is not None:
             # if the candles are below 100, the reward will still be positive
             # its cubed so the sign is preserved and the extremes are much better / worse
