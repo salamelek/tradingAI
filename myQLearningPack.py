@@ -55,9 +55,9 @@ class DeepQNetwork(nn.Module):
         self.fc2Dims = fc2Dims
         self.nActions = nActions
 
-        # first linear layer of inputs (?)
+        # the input layer and the first hidden layer (3 and 256 neurons respectively)
         self.fc1 = nn.Linear(*self.inputDims, self.fc1Dims)
-        # second linear layer (?)
+        # first and second hidden layer (256 neurons)
         self.fc2 = nn.Linear(self.fc1Dims, self.fc2Dims)
         # the output of the deep NN (neural network)
         self.fc3 = nn.Linear(self.fc2Dims, self.nActions)
@@ -70,7 +70,7 @@ class DeepQNetwork(nn.Module):
             print("Successfully using GPU!\n")
             self.device = t.device("cuda:0")
         else:
-            print("Nope, using cpu\n")
+            print("Nope, using CPU\n")
             self.device = t.device("cpu")
         self.to(self.device)
 
@@ -82,6 +82,9 @@ class DeepQNetwork(nn.Module):
         x = f.relu(self.fc2(x))
         # action is the last layer. No relu function, because we don't want values out of 0-1 range (08:00)
         actions = self.fc3(x)
+        # FIXME this seems not to work
+        # action is the last layer, with tanh activation function to get the values from -1 to 1
+        # actions = t.tanh(self.fc3(x))
 
         return actions
 
@@ -91,9 +94,9 @@ class Agent:
         self.gamma = gamma                                  # determines the weighting of future rewards
         self.epsilon = epsilon                              # How much time does the agent use for exploring vs taking the best known action
         self.lr = lr                                        # Learning rate, to pass into our neural network (?idk what it does?)
-        self.epsMin = epsMin                                # I think this is the minimum value of epsilon
-        self.epsDec = epsDec                                # I think this is the value by which epsilon is decremented
-        self.inputDims = inputDims                          # I guess the dimension of the input?
+        self.epsMin = epsMin                                # Minimum value of epsilon
+        self.epsDec = epsDec                                # Epsilon decrement
+        self.inputDims = inputDims                          # Input dimension
         self.actionSpace = [i for i in range(nActions)]     # nActions represented as ints (easier to randomly pick one)
         self.maxMemSize = maxMemSize                        # maximum memory allocated
         self.batchSize = batchSize                          # Batches of memories (???)
@@ -120,19 +123,22 @@ class Agent:
         self.memCounter += 1
 
     def chooseAction(self, observation):
-        # if a random number is greater than epsilon, it will take the best known action
+        # if a random number 0-1 is greater than epsilon, it will take the best known action
         if np.random.random() > self.epsilon:
-
             # Convert the list of NumPy arrays to a single NumPy array
             state_np = np.array([observation])
             # Convert the NumPy array to a PyTorch tensor
             state = t.tensor(state_np, dtype=t.float32).to(self.model.device)
 
             actions = self.model.forward(state)
+            # TODO instead of choosing one of three actions, use the first output to determine buy, sell or hold, the second one for the take profit and the third one for the stop loss
+            # TODO probably will have to also enlarge the network and optimise epsilon, lr and stuff
             action = t.argmax(actions).item()
 
         else:
+            # TODO instead of a random number in the action space it has to spit out 3 random numbers
             action = np.random.choice(self.actionSpace)
+            # action = choose 3 random nums from -1 to 1
 
         return action
 
@@ -249,7 +255,9 @@ class TradingEnv(gym.Env):
         elif action == 2:
             # hold
             self.holdCount += 1
-            self.reward += 0
+            self.reward += -0.1
+            # have to reset this so it doesn't penalize hold
+            candlesToExit = 0
 
         # count the money
         self.cumulativeProfit += self.tradeProfit
@@ -267,7 +275,15 @@ class TradingEnv(gym.Env):
 
         # set reward
         # self.reward += candlesToExit / netProfit
-        self.reward += netProfit
+
+        if candlesToExit is not None:
+            # if the candles are below 100, the reward will still be positive
+            # its cubed so the sign is preserved and the extremes are much better / worse
+            self.reward += (netProfit ** 3) - (candlesToExit / 100)
+
+        else:
+            # I'm not even sure if the netProfit exists if there are no candlesToExit
+            self.reward += netProfit
 
         # check if it's done
         if self.balance < 0.0:

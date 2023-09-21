@@ -9,6 +9,8 @@ import torch
 
 if __name__ == '__main__':
     print("Getting data...")
+    # train data should be 1Mbtcusdt, 1Methusdt, 1M..., 1Mbtcusdt2, 1M ethusdt2, ... to get a nice generalization
+    # only downside is that it will not be market specific, so maybe it will not work... yet to be seen
     trainData = getData()
     print("Done!\n")
 
@@ -16,7 +18,7 @@ if __name__ == '__main__':
     agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[3], epsMin=0.01, lr=0.001)
 
     listCumProfits = []
-    retries = 5
+    retries = 1
 
     for i in range(retries):
         totRowsNum = len(trainData.index)
@@ -52,18 +54,15 @@ if __name__ == '__main__':
     print(f"Number buys: {(info['counts'][0])}")
     print(f"Number sells: {(info['counts'][1])}")
     print(f"Number holds: {(info['counts'][2])}")
+    print(f"Average reward: {sum(rewards) / len(rewards)}")
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), sharex="all")
-
-    # Plot the original 'close' price, EMAs, and RSI in the top subplot
     ax1.plot(listCumProfits[retries - 1], label='Cum. profits', color='blue')
     ax1.set_ylabel('Cum. profits')
     ax1.grid()
-
     ax2.plot(rewards, label="rewards", color="black")
     ax2.set_ylabel('Rewards')
     ax2.grid()
-
     plt.tight_layout()
     plt.show()
 
