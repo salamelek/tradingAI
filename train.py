@@ -3,6 +3,7 @@ from dataGetter import getData
 from loadingBar import progressBar
 
 import matplotlib.pyplot as plt
+import time
 
 import torch
 
@@ -15,10 +16,12 @@ if __name__ == '__main__':
     print("Done!\n")
 
     env = TradingEnv(trainData=trainData, startBalance=100, commissionFee=0.0025, investmentSize=1.0, slTp=0.01)
-    agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[3], epsMin=0.01, lr=0.001)
+    agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[5], epsMin=0.01, lr=0.001)
 
     listCumProfits = []
     retries = 1
+
+    startTime = time.time()
 
     for i in range(retries):
         totRowsNum = len(trainData.index)
@@ -49,6 +52,10 @@ if __name__ == '__main__':
 
         listCumProfits.append(cumulativeProfitValues)
 
+    endTime = time.time()
+
+    print()
+    print(f"Time: {endTime - startTime}")
     print()
     print(f"End balance: {info['balance']}")
     print(f"Number buys: {(info['counts'][0])}")
@@ -64,11 +71,12 @@ if __name__ == '__main__':
     ax2.set_ylabel('Rewards')
     ax2.grid()
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
     # save agent
-    if input("Do you want to save this model? [y/n]:\n") != "n":
-        fileName = input("Enter the file name: ")
-        torch.save(agent.model.state_dict(), f"savedModels/{fileName}.pth")
-        print("File saved!")
+    # if input("Do you want to save this model? [y/n]:\n") != "n":
+    #     fileName = input("Enter the file name: ")
+    #     torch.save(agent.model.state_dict(), f"savedModels/{fileName}.pth")
+    #     print("File saved!")
 
+    torch.save(agent.model.state_dict(), "wholeNightTraining")

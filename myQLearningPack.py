@@ -47,20 +47,22 @@ def calcPosition(df, entryPrice, slTp, currentPos):
 
 
 class DeepQNetwork(nn.Module):
-    def __init__(self, lr, inputDims, fc1Dims, fc2Dims, nActions):
+    def __init__(self, lr, inputDims, fc1Dims, fc2Dims, fc3Dims, nActions):
         super(DeepQNetwork, self).__init__()
 
         self.inputDims = inputDims
         self.fc1Dims = fc1Dims
         self.fc2Dims = fc2Dims
+        self.fc3Dims = fc3Dims
         self.nActions = nActions
 
         # the input layer and the first hidden layer (3 and 256 neurons respectively)
         self.fc1 = nn.Linear(*self.inputDims, self.fc1Dims)
         # first and second hidden layer (256 neurons)
         self.fc2 = nn.Linear(self.fc1Dims, self.fc2Dims)
+        self.fc3 = nn.Linear(self.fc2Dims, self.fc3Dims)
         # the output of the deep NN (neural network)
-        self.fc3 = nn.Linear(self.fc2Dims, self.nActions)
+        self.fc4 = nn.Linear(self.fc3Dims, self.nActions)
 
         self.optimiser = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
@@ -103,7 +105,7 @@ class Agent:
         self.memCounter = 0                                 # keep track of the position of the first available memory to store the agent's memory
 
         # in the tutorial it's called qEval instead of model
-        self.model = DeepQNetwork(self.lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
+        self.model = DeepQNetwork(self.lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256, fc3Dims=256)
 
         # store memories
         self.stateMemory = np.zeros((self.maxMemSize, *inputDims), dtype=np.float32)  # always specify the datatype so there is no loss of info
@@ -216,9 +218,11 @@ class TradingEnv(gym.Env):
         self.buyCount, self.sellCount, self.holdCount = 0, 0, 0
 
         self.observation = np.array([
-            self.trainData["rsi"][self.counter],
             self.trainData["adx"][self.counter],
-            self.trainData["cci"][self.counter]
+            self.trainData["cci"][self.counter],
+            self.trainData["ema5Slope"][self.counter],
+            self.trainData["ema50Slope"][self.counter],
+            self.trainData["rsi"][self.counter],
         ])
 
         return self.observation
@@ -268,9 +272,11 @@ class TradingEnv(gym.Env):
         self.counter += 1
 
         self.observation = np.array([
-            self.trainData["rsi"][self.counter],
             self.trainData["adx"][self.counter],
-            self.trainData["cci"][self.counter]
+            self.trainData["cci"][self.counter],
+            self.trainData["ema5Slope"][self.counter],
+            self.trainData["ema50Slope"][self.counter],
+            self.trainData["rsi"][self.counter],
         ])
 
         # set reward
@@ -278,7 +284,7 @@ class TradingEnv(gym.Env):
         if candlesToExit is not None:
             # if the candles are below 100, the reward will still be positive
             # its cubed so the sign is preserved and the extremes are much better / worse
-            self.reward += (netProfit ** 3) - (candlesToExit / 100)
+            self.reward += netProfit - (candlesToExit / 100)
 
         else:
             # I'm not even sure if the netProfit exists if there are no candlesToExit

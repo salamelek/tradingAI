@@ -73,13 +73,22 @@ def ADX(df, period):
     return df
 
 
-def CCI(df, nDays):
+def CCI(df, period):
     df['TP'] = (df['high'] + df['low'] + df['close']) / 3
-    df['sma'] = df['TP'].rolling(nDays).mean()
-    df['mad'] = df['TP'].rolling(nDays).apply(calculate_mad)
+    df['sma'] = df['TP'].rolling(period).mean()
+    df['mad'] = df['TP'].rolling(period).apply(calculate_mad)
     df['cci'] = (df['TP'] - df['sma']) / (0.015 * df['mad'])
 
     del df['TP'], df['sma'], df['mad']
+
+    return df
+
+
+def EMASlope(df, period):
+    df[f"ema{period}"] = df["close"].ewm(span=period, adjust=False).mean()
+    df[f"ema{period}Slope"] = df[f"ema{period}"].diff()
+
+    del df[f"ema{period}"]
 
     return df
 
@@ -125,6 +134,14 @@ def getData():
     # cci
     cciPeriod = 20
     df = CCI(df, cciPeriod)
+
+    # ema5
+    ema5Period = 5
+    df = EMASlope(df, ema5Period)
+
+    # ema50
+    ema50Period = 50
+    df = EMASlope(df, ema50Period)
 
     # drop Nan rows
     df = df.dropna()
