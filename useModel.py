@@ -8,10 +8,10 @@ from loadingBar import progressBar
 
 lr = 0
 nActions = 3
-inputDims = [3]
+inputDims = [5]
 
-model = DeepQNetwork(lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256)
-model.load_state_dict(t.load("savedModels/3M_10gen.pth"))
+model = DeepQNetwork(lr, nActions=nActions, inputDims=inputDims, fc1Dims=256, fc2Dims=256, fc3Dims=256)
+model.load_state_dict(t.load("savedModels/wholeNightTraining.pth"))
 
 print("Getting data...")
 trainData = getData()
@@ -34,7 +34,7 @@ cumProfits, profits = [], []
 totRowsNum = len(trainData.index)
 with t.no_grad():
     for i in range(totRowsNum):
-        prediction = model(t.tensor(np.array([trainData["rsi"][i], trainData["adx"][i], trainData["cci"][i]]), dtype=t.float32))
+        prediction = model(t.tensor(np.array([trainData["adx"][i], trainData["cci"][i], trainData["ema5Slope"][i], trainData["ema50Slope"][i], trainData["rsi"][i]]), dtype=t.float32))
         action = t.argmax(prediction).item()
 
         # trading logic

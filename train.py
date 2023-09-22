@@ -19,7 +19,7 @@ if __name__ == '__main__':
     agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[5], epsMin=0.01, lr=0.001)
 
     listCumProfits = []
-    retries = 1
+    retries = 100
 
     startTime = time.time()
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
             counter += 1
 
             # print something
-            progressBar(counter + 2, totRowsNum, "Training progress:")
+            progressBar(counter + 2, totRowsNum, f"Training progress ({i}/{retries}):")
 
         listCumProfits.append(cumulativeProfitValues)
 
@@ -71,12 +71,10 @@ if __name__ == '__main__':
     ax2.set_ylabel('Rewards')
     ax2.grid()
     plt.tight_layout()
-    # plt.show()
+    plt.show()
 
     # save agent
-    # if input("Do you want to save this model? [y/n]:\n") != "n":
-    #     fileName = input("Enter the file name: ")
-    #     torch.save(agent.model.state_dict(), f"savedModels/{fileName}.pth")
-    #     print("File saved!")
-
-    torch.save(agent.model.state_dict(), "wholeNightTraining")
+    if input("Do you want to save this model? [y/n]:\n") != "n":
+        fileName = input("Enter the file name: ")
+        torch.save(agent.model.state_dict(), f"savedModels/{fileName}.pth")
+        print("File saved!")
