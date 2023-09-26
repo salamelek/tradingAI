@@ -74,7 +74,7 @@ class DeepQNetwork(nn.Module):
         print("Trying to use GPU..")
         if t.cuda.is_available():
             print("Successfully using GPU!\n")
-            self.device = t.device("cuda:0")
+            self.device = t.device("cuda")
         else:
             print("Nope, using CPU\n")
             self.device = t.device("cpu")

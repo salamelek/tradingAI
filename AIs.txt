@@ -1,13 +1,21 @@
-trading as task:
+Trading as task:
+    1) Regression:
+        Predicting continuous numerical values based on input features. Example: predicting house prices based on features like area, location, etc.
 
-1) Regression:
-	Predicting continuous numerical values based on input features. Example: predicting house prices based on features like area, location, etc.
-	
-2) Clustering:
-	Grouping similar data points together based on their features without predefined labels. Example: customer segmentation for targeted marketing.
-	
-3) Time Series Analysis:
-	Analyzing and predicting data points collected or recorded in a sequential manner, often with time stamps. Example: predicting stock prices.
+    2) Clustering:
+        Grouping similar data points together based on their features without predefined labels. Example: customer segmentation for targeted marketing.
 
-4) Reinforcement Learning:
-	Teaching agents to make sequences of decisions in an environment to achieve a goal, often used in robotics and game-playing.
+    3) Time Series Analysis:
+        Analyzing and predicting data points collected or recorded in a sequential manner, often with time stamps. Example: predicting stock prices.
+
+    4) Reinforcement Learning:
+        Teaching agents to make sequences of decisions in an environment to achieve a goal, often used in robotics and game-playing.
+
+    5) Classification:
+        Classificate chart as "Strong bull, bull, range, bear, strong bear" and yada yada
+
+
+
+Activation functions:
+    The most used activation function is relu, because it works best. The neuron is inactive if the threshold is not met and has some values if its met
+    So don't use tanH or even sigmoid, it's trash. It's much better to use RELU just learn how to use them

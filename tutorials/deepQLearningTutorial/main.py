@@ -1,5 +1,5 @@
 import gym
-from myQLearningPack import Agent
+from qLearning_v1.myQLearningPack import Agent
 import numpy as np
 
 if __name__ == '__main__':

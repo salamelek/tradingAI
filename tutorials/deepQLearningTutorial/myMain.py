@@ -1,5 +1,5 @@
-from myQLearningPack import Agent, TradingEnv
-from old_shit2.dataGetter import getCsvData
+from qLearning_v1.myQLearningPack import Agent, TradingEnv
+from tutorials.old_shit2.dataGetter import getCsvData
 import numpy as np
 
 
