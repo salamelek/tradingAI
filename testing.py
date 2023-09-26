@@ -1,8 +1,6 @@
-tradeProfit = 0.01
-balance = 100
-investmentSize = 0.01
-commissionFee = 0.01
+import numpy as np
 
-netProfit = tradeProfit * ((balance * investmentSize) - (balance * investmentSize * commissionFee))
 
-print(netProfit)
+random_array = tuple(np.random.uniform(-1, 1, size=3))
+
+print(random_array)

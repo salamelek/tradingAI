@@ -19,7 +19,7 @@ if __name__ == '__main__':
     agent = Agent(gamma=0.99, epsilon=1.0, batchSize=64, nActions=3, inputDims=[5], epsMin=0.01, lr=0.001)
 
     listCumProfits = []
-    retries = 100
+    retries = 1
 
     startTime = time.time()
 
@@ -34,6 +34,7 @@ if __name__ == '__main__':
             action = agent.chooseAction(observation)
             observation_, reward, done, info = env.step(action)
 
+            # TODO learn how to store an action that is a tuple for multiple actions
             agent.storeTransition(observation, action, reward, observation_, done)
 
             agent.learn()
@@ -48,7 +49,7 @@ if __name__ == '__main__':
             counter += 1
 
             # print something
-            progressBar(counter + 2, totRowsNum, f"Training progress ({i}/{retries}):")
+            progressBar(counter + 2, totRowsNum, f"Training progress ({i + 1}/{retries}):")
 
         listCumProfits.append(cumulativeProfitValues)
 

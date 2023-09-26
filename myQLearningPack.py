@@ -14,6 +14,9 @@ from gym import spaces
 import gym
 
 
+t.autograd.set_detect_anomaly(True)
+
+
 def calcPosition(df, entryPrice, slTp, currentPos):
     try:
         highExitIndex = min(df[(df["high"] > (entryPrice + entryPrice * slTp)) & (df["index"] > currentPos)]["index"])
@@ -60,6 +63,7 @@ class DeepQNetwork(nn.Module):
         self.fc1 = nn.Linear(*self.inputDims, self.fc1Dims)
         # first and second hidden layer (256 neurons)
         self.fc2 = nn.Linear(self.fc1Dims, self.fc2Dims)
+        # second and third hidden layer (256 neurons)
         self.fc3 = nn.Linear(self.fc2Dims, self.fc3Dims)
         # the output of the deep NN (neural network)
         self.fc4 = nn.Linear(self.fc3Dims, self.nActions)
@@ -82,11 +86,10 @@ class DeepQNetwork(nn.Module):
         x = f.relu(self.fc1(state))
         # second layer gets the output of the first layer
         x = f.relu(self.fc2(x))
+        # third layer gets the output of the second layer
+        x = f.relu(self.fc3(x))
         # action is the last layer. No relu function, because we don't want values out of 0-1 range (08:00)
-        actions = self.fc3(x)
-        # FIXME this seems not to work
-        # action is the last layer, with tanh activation function to get the values from -1 to 1
-        # actions = t.tanh(self.fc3(x))
+        actions = self.fc4(x)
 
         return actions
 
@@ -133,14 +136,18 @@ class Agent:
             state = t.tensor(state_np, dtype=t.float32).to(self.model.device)
 
             actions = self.model.forward(state)
+            action = t.argmax(actions).item()
+            # TODO is this a good approach? Is this considering the global possible range? I don't know anything ;-;
             # TODO instead of choosing one of three actions, use the first output to determine buy, sell or hold, the second one for the take profit and the third one for the stop loss
             # TODO probably will have to also enlarge the network and optimise epsilon, lr and stuff
-            action = t.argmax(actions).item()
+            # put the actions values between -1 and 1
+            # actions = t.tanh(actions)
+            # actionArray = tuple(actions)
 
         else:
-            # TODO instead of a random number in the action space it has to spit out 3 random numbers
             action = np.random.choice(self.actionSpace)
-            # action = choose 3 random nums from -1 to 1
+            # TODO instead of a random number in the action space it has to spit out 3 random numbers
+            # actionArray = tuple(np.random.uniform(-1, 1, size=3))
 
         return action
 
