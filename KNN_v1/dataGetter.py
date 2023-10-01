@@ -2,74 +2,88 @@
 
 import pyautogui
 import pytesseract
-import keyboard
+from pynput import keyboard
 import json
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 # Set the region to capture (left, top, width, height)
 # IMPORTANT the resolution should be quite high, so take the screenshot at like 200% zoom
-ADXRegion = (407, 943, 120, 40)
-CCIRegion = (359, 1048, 120, 40)
-RSIRegion = (361, 1191, 120, 40)
+# windows
+# ADXRegion = (407, 943, 120, 40)
+# CCIRegion = (359, 1048, 120, 40)
+# RSIRegion = (361, 1191, 120, 40)
+# ubuntu
+ADXRegion = (2091, 949, 120, 40)
+CCIRegion = (2045, 1047, 120, 40)
+RSIRegion = (2042, 1174, 120, 40)
 
-with open('data_5m.json') as json_file:
-	data = json.load(json_file)
+with open('adx_cci_rsi_5min.json') as json_file:
+    data = json.load(json_file)
 
-print("Running")
-
-
-def on_s(e):
-	try:
-		extractedADX = float(pytesseract.image_to_string(pyautogui.screenshot(region=ADXRegion)))
-		extractedCCI = float(pytesseract.image_to_string(pyautogui.screenshot(region=CCIRegion)))
-		extractedRSI = float(pytesseract.image_to_string(pyautogui.screenshot(region=RSIRegion)))
-
-		data["bearish"].append([extractedADX, extractedCCI, extractedRSI])
-
-		print("Done!")
-
-	except ValueError:
-		print("Could not read well :/")
+print("Data getter running")
 
 
-def on_h(e):
-	try:
-		extractedADX = float(pytesseract.image_to_string(pyautogui.screenshot(region=ADXRegion)))
-		extractedCCI = float(pytesseract.image_to_string(pyautogui.screenshot(region=CCIRegion)))
-		extractedRSI = float(pytesseract.image_to_string(pyautogui.screenshot(region=RSIRegion)))
+def on_s():
+    try:
+        extractedADX = float(pytesseract.image_to_string(pyautogui.screenshot(region=ADXRegion)))
+        extractedCCI = float(pytesseract.image_to_string(pyautogui.screenshot(region=CCIRegion)))
+        extractedRSI = float(pytesseract.image_to_string(pyautogui.screenshot(region=RSIRegion)))
 
-		data["ranging"].append([extractedADX, extractedCCI, extractedRSI])
+        data["bearish"].append([extractedADX, extractedCCI, extractedRSI])
 
-		print("Done!")
+        print(extractedADX, extractedCCI, extractedRSI)
 
-	except ValueError:
-		print("Could not read well :/")
-
-
-def on_l(e):
-	try:
-		extractedADX = float(pytesseract.image_to_string(pyautogui.screenshot(region=ADXRegion)))
-		extractedCCI = float(pytesseract.image_to_string(pyautogui.screenshot(region=CCIRegion)))
-		extractedRSI = float(pytesseract.image_to_string(pyautogui.screenshot(region=RSIRegion)))
-
-		data["bullish"].append([extractedADX, extractedCCI, extractedRSI])
-
-		print("Done!")
-
-	except ValueError:
-		print("Could not read well :/")
+    except ValueError:
+        print("Could not read well :/")
 
 
-# short
-keyboard.on_press_key('s', on_s)
-# hold
-keyboard.on_press_key('h', on_h)
-# long
-keyboard.on_press_key('l', on_l)
+def on_h():
+    try:
+        extractedADX = float(pytesseract.image_to_string(pyautogui.screenshot(region=ADXRegion)))
+        extractedCCI = float(pytesseract.image_to_string(pyautogui.screenshot(region=CCIRegion)))
+        extractedRSI = float(pytesseract.image_to_string(pyautogui.screenshot(region=RSIRegion)))
 
-# Keep the program running
-keyboard.wait('esc')  # Program will exit when the Escape key is pressed
+        data["ranging"].append([extractedADX, extractedCCI, extractedRSI])
 
-with open("data_5m.json", 'w') as json_file:
-	json.dump(data, json_file)
+        print(extractedADX, extractedCCI, extractedRSI)
+
+    except ValueError:
+        print("Could not read well :/")
+
+
+def on_l():
+    try:
+        extractedADX = float(pytesseract.image_to_string(pyautogui.screenshot(region=ADXRegion)))
+        extractedCCI = float(pytesseract.image_to_string(pyautogui.screenshot(region=CCIRegion)))
+        extractedRSI = float(pytesseract.image_to_string(pyautogui.screenshot(region=RSIRegion)))
+
+        data["bullish"].append([extractedADX, extractedCCI, extractedRSI])
+
+        print(extractedADX, extractedCCI, extractedRSI)
+
+    except ValueError:
+        print("Could not read well :/")
+
+
+def onPress(key):
+    try:
+        if key.char == "s":
+            on_s()
+        elif key.char == "h":
+            on_h()
+        elif key.char == "l":
+            on_l()
+
+    except AttributeError:
+        # Key is not a printable character
+        if key == keyboard.Key.esc:
+            return False
+
+
+# Set up the keyboard listener
+with keyboard.Listener(on_press=onPress) as listener:
+    listener.join()
+
+with open("adx_cci_rsi_5min.json", 'w') as json_file:
+    json.dump(data, json_file)

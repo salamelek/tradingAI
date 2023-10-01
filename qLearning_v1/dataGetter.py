@@ -108,7 +108,7 @@ def getDataFromYf():
 def getDataFromCsv():
     # append the CSV files
     for i in range(3):
-        dfMerged = pd.read_csv(f'./tradingData/BTCUSDT/BTCUSDT-5m-2023-0{i + 6}.csv', header=None, usecols=[0, 1, 2, 3, 4])
+        dfMerged = pd.read_csv(f'../qLearning_v1/tradingData/BTCUSDT/BTCUSDT-5m-2023-0{i + 6}.csv', header=None, usecols=[0, 1, 2, 3, 4])
         if i > 0:
             dfMerged = prevDf.merge(dfMerged, how="outer")
         prevDf = dfMerged
