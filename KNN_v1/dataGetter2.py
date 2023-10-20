@@ -12,43 +12,37 @@ driver = webdriver.Firefox(options=options)
 
 # Replace 'https://example.com' with the URL you want to access
 url = "https://www.investing.com/charts/futures-charts"
+driver.get(url)
+time.sleep(10)
 
-try:
-    driver.get(url)
+retries = 10
 
-    time.sleep(10)
+for i in range(retries):
+    try:
+        """
+        Attempts to connect to the given URL
+        It will also try to access nested iframes to get the HTML of the chart and thus its values
+        """
 
-    # Find the parent iframe by a partial match on its src attribute
-    partial_src = "https://tvc4.investing.com/init.php"
-    parent_iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        partial_src = "https://tvc4.investing.com/init.php"
+        parent_iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        driver.switch_to.frame(parent_iframe)
+        partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/index60-prod.html"
+        iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        driver.switch_to.frame(iframe)
+        partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/static/tv-chart"
+        iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
 
-    # Switch to the parent iframe
-    driver.switch_to.frame(parent_iframe)
+        # Switch to the third iframe
+        driver.switch_to.frame(iframe)
 
-    # Find the second iframe by a partial match on its src attribute
-    partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/index60-prod.html"
-    iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        # driver.page_source    # <-- get the raw HTML
 
-    # Switch to the second iframe
-    driver.switch_to.frame(iframe)
+        break
 
-    partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/static/tv-chart"
-    iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+    except Exception as e:
+        print(f"An error occurred: \n\n{e}\n\n... Retrying ({i + 1 / retries})")
+        time.sleep(10)
 
-    # Switch to the third iframe
-    driver.switch_to.frame(iframe)
-
-    # Now you are inside the third iframe, and you can access its content
-    iframe_content = driver.page_source
-
-    # to get the Open, close values, use the pane-legend-item-value__main class for the query
-
-    # TODO wait for the user to open the indicators and select the right stock
-    # TODO will have to come up with a objective strategy
-
-    # You can now work with the content of the second iframe
-    print(iframe_content)
-
-
-except Exception as e:
-    print(f"An error occurred: {e}")
+for i in range(10):
+    print(driver.page_source)
