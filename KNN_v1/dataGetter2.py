@@ -24,8 +24,8 @@ for i in range(retries):
         It will also try to access nested iframes to get the HTML of the chart and thus its values
         """
 
-        partial_src = "https://tvc4.investing.com/init.php"
-        parent_iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        partial_id = "tvc_frame_"
+        parent_iframe = driver.find_element(By.XPATH, f'//iframe[contains(@id, "{partial_id}")]')
         driver.switch_to.frame(parent_iframe)
         partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/index60-prod.html"
         iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
@@ -41,7 +41,8 @@ for i in range(retries):
         break
 
     except Exception as e:
-        print(f"An error occurred: \n\n{e}\n\n... Retrying ({i + 1 / retries})")
+        print(f"An error occurred: \n\n{e}\n\n... Retrying ({i + 1} / {retries})")
+        exit()
         time.sleep(10)
 
 for i in range(10):
