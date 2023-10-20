@@ -41,6 +41,11 @@ try:
     # Now you are inside the third iframe, and you can access its content
     iframe_content = driver.page_source
 
+    # to get the Open, close values, use the pane-legend-item-value__main class for the query
+
+    # TODO wait for the user to open the indicators and select the right stock
+    # TODO will have to come up with a objective strategy
+
     # You can now work with the content of the second iframe
     print(iframe_content)
 
