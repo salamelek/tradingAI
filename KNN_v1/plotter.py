@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import json
 
 
-with open('adx_cci_rsi_5min.json') as json_file:
+with open('labeled_data/adx_cci_rsi_5min.json') as json_file:
 	trainData = json.load(json_file)
 
 bullishADX, bullishCCI, bullishRSI = [], [], []
