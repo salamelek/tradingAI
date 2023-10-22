@@ -42,7 +42,7 @@ def getTestPoint():
 
 def getAction(point):
     distList = []
-    with open('labeled_data/adx_cci_rsi_5min.json') as json_file:
+    with open('../labeled_data/adx_cci_rsi_5min.json') as json_file:
         data = json.load(json_file)
 
     for buyPoint in data["bullish"]:

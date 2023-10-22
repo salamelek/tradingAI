@@ -33,9 +33,9 @@ data = {
 def getDriver(url):
     options = webdriver.FirefoxOptions()
     options.headless = False
-    driver = webdriver.Firefox(options=options)
+    myDriver = webdriver.Firefox(options=options)
 
-    driver.get(url)
+    myDriver.get(url)
 
     try:
         """
@@ -44,18 +44,18 @@ def getDriver(url):
         """
 
         partial_id = "tvc_frame_"
-        parent_iframe = driver.find_element(By.XPATH, f'//iframe[contains(@id, "{partial_id}")]')
-        driver.switch_to.frame(parent_iframe)
+        parent_iframe = myDriver.find_element(By.XPATH, f'//iframe[contains(@id, "{partial_id}")]')
+        myDriver.switch_to.frame(parent_iframe)
         partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/index60-prod.html"
-        iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
-        driver.switch_to.frame(iframe)
+        iframe = myDriver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        myDriver.switch_to.frame(iframe)
         partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/static/tv-chart"
-        iframe = driver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        iframe = myDriver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
 
         # Switch to the third iframe
-        driver.switch_to.frame(iframe)
+        myDriver.switch_to.frame(iframe)
 
-        return driver
+        return myDriver
 
         # driver.page_source    # <-- get the raw HTML
 
@@ -87,9 +87,9 @@ def getIndicatorsValue():
     cciSelector = f".{class_name}[style*='color: {cciColor}']"
     rsiSelector = f".{class_name}[style*='color: {rsiColor}']"
 
-    adxValue = driver.find_element(By.CSS_SELECTOR, adxSelector).text
-    cciValue = driver.find_element(By.CSS_SELECTOR, cciSelector).text
-    rsiValue = driver.find_element(By.CSS_SELECTOR, rsiSelector).text
+    adxValue = float(driver.find_element(By.CSS_SELECTOR, adxSelector).text)
+    cciValue = float(driver.find_element(By.CSS_SELECTOR, cciSelector).text)
+    rsiValue = float(driver.find_element(By.CSS_SELECTOR, rsiSelector).text)
 
     return adxValue, cciValue, rsiValue
 
@@ -144,10 +144,12 @@ def labelKline(label):
     bufferPoint[2].append(rsi)
 
     # add the point to the data dict
-    data[label].append(bufferPoint)
+    # FIXME idk why but everything gets rewrited as the last entry
+    a = bufferPoint
+    data[label].append(a)
+    print(a)
 
     # print a super cool message
-
     if label == "l":
         msg = "\033[32m" + "\033[1m" + "LONG" + "\033[0m"
     elif label == "s":
@@ -214,8 +216,6 @@ DATA LOGGER SETUP
 
         else:
             print("Invalid input!\nThe possible inputs are the following: l, s, h, del, stop")
-
-        print()
 
     # write all the data in a json file
     newFileName = str(date.today())

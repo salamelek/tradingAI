@@ -18,7 +18,7 @@ ADXRegion = (2091, 949, 120, 40)
 CCIRegion = (2045, 1047, 120, 40)
 RSIRegion = (2042, 1174, 120, 40)
 
-with open('labeled_data/adx_cci_rsi_5min.json') as json_file:
+with open('../labeled_data/adx_cci_rsi_5min.json') as json_file:
     data = json.load(json_file)
 
 print("Data getter running")
@@ -85,5 +85,5 @@ def onPress(key):
 with keyboard.Listener(on_press=onPress) as listener:
     listener.join()
 
-with open("labeled_data/adx_cci_rsi_5min.json", 'w') as json_file:
+with open("../labeled_data/adx_cci_rsi_5min.json", 'w') as json_file:
     json.dump(data, json_file)
