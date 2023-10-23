@@ -4,26 +4,24 @@ from selenium.webdriver.common.keys import Keys
 
 import time
 import json
+import copy
 from datetime import date
 
-
-pressInterval = 0.2     # how many seconds to wait between clicks
+pressInterval = 0.2  # how many seconds to wait between clicks
 running = True
-
 
 timeFrame = "15min"
 indicators = "adx-cci-rsi"
 
-
 bufferLen = 5
 bufferPoint = [[], [], []]
-
 
 data = {
     "h": [],
     "l": [],
     "s": []
 }
+
 
 # load a dict from a json file
 # with open('labeled_data/adx_cci_rsi_5min.json') as jsonFile:
@@ -144,10 +142,10 @@ def labelKline(label):
     bufferPoint[2].append(rsi)
 
     # add the point to the data dict
-    # FIXME idk why but everything gets rewrited as the last entry
-    a = bufferPoint
-    data[label].append(a)
-    print(a)
+    # the buffer point must be copied to avoid references to the same buffer point
+    data[label].append(copy.deepcopy(bufferPoint))
+
+    print(data)
 
     # print a super cool message
     if label == "l":
