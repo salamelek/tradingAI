@@ -2,7 +2,10 @@ import matplotlib.pyplot as plt
 import json
 
 
-with open('labeled_data/2023-10-22-15min-adx-cci-rsi-buffer_5_1st-test.json') as json_file:
+wantedIndex = 4
+
+
+with open('labeled_data/2023-10-23-15min-adx-cci-rsi-5-test1.json') as json_file:
 	trainData = json.load(json_file)
 
 bullishADX, bullishCCI, bullishRSI = [], [], []
@@ -10,20 +13,19 @@ bearishADX, bearishCCI, bearishRSI = [], [], []
 rangingADX, rangingCCI, rangingRSI = [], [], []
 
 for triplet in trainData["l"]:
-	print(triplet)
-	bullishADX.append(triplet[0][0])
-	bullishCCI.append(triplet[1][0])
-	bullishRSI.append(triplet[2][0])
+	bullishADX.append(triplet[0][wantedIndex])
+	bullishCCI.append(triplet[1][wantedIndex])
+	bullishRSI.append(triplet[2][wantedIndex])
 
 for triplet in trainData["s"]:
-	bearishADX.append(triplet[0][0])
-	bearishCCI.append(triplet[1][0])
-	bearishRSI.append(triplet[2][0])
+	bearishADX.append(triplet[0][wantedIndex])
+	bearishCCI.append(triplet[1][wantedIndex])
+	bearishRSI.append(triplet[2][wantedIndex])
 
 for triplet in trainData["h"]:
-	rangingADX.append(triplet[0][0])
-	rangingCCI.append(triplet[1][0])
-	rangingRSI.append(triplet[2][0])
+	rangingADX.append(triplet[0][wantedIndex])
+	rangingCCI.append(triplet[1][wantedIndex])
+	rangingRSI.append(triplet[2][wantedIndex])
 
 # Create a 3D scatter plot
 fig = plt.figure()

@@ -128,6 +128,7 @@ def fillBuffer():
 
 
 def deleteLast():
+    # TODO this :')
     print("deleted")
 
 
@@ -145,8 +146,6 @@ def labelKline(label):
     # add the point to the data dict
     # the buffer point must be copied to avoid references to the same buffer point
     data[label].append(copy.deepcopy(bufferPoint))
-
-    print(data)
 
     # print a super cool message
     if label == "l":
@@ -175,11 +174,11 @@ if __name__ == '__main__':
         
     Structure of the data:
         data = {
-            [
+            "h": [[
                 [1, 2, 3, 4, 5],    # adx
                 [2, 3, 4, 5, 6],    # cci
                 [3, 4, 5, 6, 7]     # rsi
-            ]: "l"
+            ]]
         }
         
         each point is a 2D list. Each sublist is a list of timeframes for each indicator.
@@ -200,15 +199,28 @@ DATA LOGGER SETUP
 
     fillBuffer()
 
+    lastMove = ""
     while running:
         currInput = input("Choose action (l, s, h, del, stop): ").lower()
 
-        if currInput in ["l", "s", "h"]:
+        # when pressing enter, it will select the previous move
+        if currInput == "" and lastMove != "":
+            # This can be done like 10 times better, but this works :>
+            if lastMove in ["l", "s", "h"]:
+                labelKline(lastMove)
+                moveByN(1)
+
+            elif lastMove == "del":
+                deleteLast()
+
+        elif currInput in ["l", "s", "h"]:
             labelKline(currInput)
             moveByN(1)
+            lastMove = currInput
 
         elif currInput == "del":
             deleteLast()
+            lastMove = currInput
 
         elif currInput == "stop":
             running = False
