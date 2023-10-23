@@ -12,6 +12,7 @@ running = True
 
 timeFrame = "15min"
 indicators = "adx-cci-rsi"
+additionalName = "-" + ""
 
 bufferLen = 5
 bufferPoint = [[], [], []]
@@ -218,5 +219,5 @@ DATA LOGGER SETUP
     # write all the data in a json file
     newFileName = str(date.today())
 
-    with open(f"labeled_data/{newFileName}-{timeFrame}-{indicators}-buffer_{bufferLen}.json", 'w') as json_file:
+    with open(f"labeled_data/{newFileName}-{timeFrame}-{indicators}-{bufferLen}{additionalName}.json", 'w') as json_file:
         json.dump(data, json_file)
