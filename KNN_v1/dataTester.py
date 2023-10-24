@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-k = 3
+k = 2
 wantedIndex = -1
 
 
@@ -54,7 +54,7 @@ for key in data.keys():
 
 
 trainData = pd.DataFrame(trainDict)
-randomRow = 755  # random.randint(0, len(trainData))
+randomRow = random.randint(0, len(trainData))  # 755
 testPoint = trainData.iloc[randomRow].tolist()
 trainData.drop(randomRow)
 testPointLabel = testPoint.pop(-1)
@@ -112,27 +112,39 @@ bullishADX, bullishCCI, bullishRSI = [], [], []
 bearishADX, bearishCCI, bearishRSI = [], [], []
 rangingADX, rangingCCI, rangingRSI = [], [], []
 
+counter = 0
+for triplet in data["h"]:
+    if counter != randomRow:
+        rangingADX.append(triplet[0][wantedIndex])
+        rangingCCI.append(triplet[1][wantedIndex])
+        rangingRSI.append(triplet[2][wantedIndex])
+
+    counter += 1
+
 for triplet in data["l"]:
-    bullishADX.append(triplet[0][wantedIndex])
-    bullishCCI.append(triplet[1][wantedIndex])
-    bullishRSI.append(triplet[2][wantedIndex])
+    if counter != randomRow:
+        bullishADX.append(triplet[0][wantedIndex])
+        bullishCCI.append(triplet[1][wantedIndex])
+        bullishRSI.append(triplet[2][wantedIndex])
+
+    counter += 1
 
 for triplet in data["s"]:
-    bearishADX.append(triplet[0][wantedIndex])
-    bearishCCI.append(triplet[1][wantedIndex])
-    bearishRSI.append(triplet[2][wantedIndex])
+    if counter != randomRow:
+        bearishADX.append(triplet[0][wantedIndex])
+        bearishCCI.append(triplet[1][wantedIndex])
+        bearishRSI.append(triplet[2][wantedIndex])
 
-for triplet in data["h"]:
-    rangingADX.append(triplet[0][wantedIndex])
-    rangingCCI.append(triplet[1][wantedIndex])
-    rangingRSI.append(triplet[2][wantedIndex])
+    counter += 1
+
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(bullishADX, bullishCCI, bullishRSI, c='g', marker='o', label="Bullish")
 ax.scatter(bearishADX, bearishCCI, bearishRSI, c='r', marker='o', label="Bearish")
 ax.scatter(rangingADX, rangingCCI, rangingRSI, c='y', marker='o', label="Ranging")
-ax.scatter(testPoint[4], testPoint[9], testPoint[14], c='blue', marker="o", label="Test Point")
+# ax.scatter(testPoint[4], testPoint[9], testPoint[14], c='blue', marker="o", label="Test Point")
+ax.scatter(12.7443, 98.2877, 58.7218, c='blue', marker="o", label="Test Point")
 
 ax.set_xlabel("ADX")
 ax.set_ylabel("CCI")
