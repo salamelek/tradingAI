@@ -54,10 +54,17 @@ for key in data.keys():
 
 
 trainData = pd.DataFrame(trainDict)
-randomRow = random.randint(0, len(trainData))  # 755
-testPoint = trainData.iloc[randomRow].tolist()
-trainData.drop(randomRow)
-testPointLabel = testPoint.pop(-1)
+# randomRow = random.randint(0, len(trainData))  # 755
+# testPoint = trainData.iloc[randomRow].tolist()
+# trainData.drop(randomRow)
+# testPointLabel = testPoint.pop(-1)
+
+# 5 values of adx, 5 cci and 5 rsi
+randomRow = -1
+# Gold futures, 15min, 2023-10-31 10:00:00
+testPoint = [27.1926, 25.7544, 24.9075, 20.0071, 25.7579, -82.9772, -86.3850, -60.5105, 192.5999, 237.4581, 50.4331, 45.3386, 52.6249, 64.6358, 69.4512]
+testPointLabel = "s"
+
 
 # create a list of all length
 distList = []
@@ -142,9 +149,9 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(bullishADX, bullishCCI, bullishRSI, c='g', marker='o', label="Bullish")
 ax.scatter(bearishADX, bearishCCI, bearishRSI, c='r', marker='o', label="Bearish")
-ax.scatter(rangingADX, rangingCCI, rangingRSI, c='y', marker='o', label="Ranging")
-# ax.scatter(testPoint[4], testPoint[9], testPoint[14], c='blue', marker="o", label="Test Point")
-ax.scatter(12.7443, 98.2877, 58.7218, c='blue', marker="o", label="Test Point")
+# ax.scatter(rangingADX, rangingCCI, rangingRSI, c='y', marker='o', label="Ranging")
+ax.scatter(testPoint[4], testPoint[9], testPoint[14], c='blue', marker="o", label="Test Point")
+# ax.scatter(12.7443, 98.2877, 58.7218, c='blue', marker="o", label="Test Point")
 
 ax.set_xlabel("ADX")
 ax.set_ylabel("CCI")
