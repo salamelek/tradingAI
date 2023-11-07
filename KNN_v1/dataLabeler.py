@@ -1,5 +1,8 @@
 """
 This will (should) label each kline automatically
+It will run in two phases:
+1) Getting all the klines
+2) Identifying the slopes
 
 1) connect to a chart or get data from a dict
     1.1) Data needed is at least close prices and timestamps of klines
@@ -26,19 +29,21 @@ This will (should) label each kline automatically
         timestamp of start of slope: [x, y, std, label]
 
         GC15min = {
-            1672531200: {
+            19-09-23 13:00:00: {
+                "coords": [adx0, adx1, ..., rsi4],
+                "close": 1924.65,
                 "label": "s",
                 "duration": 7,
                 "priceChange": -3.6,
-                "std": 1.2,
-                "coords": [adx0, adx1, ..., rsi4]
+                "std": 1.2
             },
-            1672531300: {
+            19-09-23 13:15:00: {
+                "coords": [adx0, adx1, ..., rsi4],
+                "close": 1920.52,
                 "label": "h",
                 "duration": None,
                 "priceChange": None,
-                "std": None,
-                "coords": [adx0, adx1, ..., rsi4]
+                "std": None
             },
         }
 """
@@ -51,12 +56,25 @@ from selenium.webdriver.common.keys import Keys
 import time
 import json
 import copy
-from datetime import date
+from datetime import datetime
 
-pressInterval = 0.2
+pressInterval = 0.3
+xMin = 3
+xMax = 50
+datetime_str = "01-01-23 00:00:00"
+timeIncrement = 15 * 60
+wantedNumOfKlines = 1000
+
 running = True
-# TODO choose a time format (idk about unix.. hard to read?)
-startTime = None
+
+bufferLen = 5
+# close, adx, cci, rsi
+bufferPoint = [[], [], [], []]
+
+# unix timestamp (seconds) format
+datetime_object = datetime.strptime(datetime_str, '%d-%m-%y %H:%M:%S')
+startTime = int(datetime.timestamp(datetime_object))
+print(f"Starting date: {datetime_object}\nUnix seconds: {startTime}")
 
 # load a dict from a json file
 # with open('labeled_data/adx_cci_rsi_5min.json') as jsonFile:
@@ -97,7 +115,7 @@ def getDriver(url):
         exit()
 
 
-def getIndicatorsValue():
+def getKline():
     """
     ================================
     IMPORTANT:
@@ -112,6 +130,7 @@ def getIndicatorsValue():
 
     class_name = "pane-legend-item-value"
 
+    closeColor = "rgb(91, 26, 19)"
     adxColor = "rgb(255, 0, 0)"
     cciColor = "rgb(128, 128, 0)"
     rsiColor = "rgb(128, 0, 128)"
@@ -124,7 +143,13 @@ def getIndicatorsValue():
     cciValue = float(driver.find_element(By.CSS_SELECTOR, cciSelector).text)
     rsiValue = float(driver.find_element(By.CSS_SELECTOR, rsiSelector).text)
 
-    return adxValue, cciValue, rsiValue
+    # Find the span element with the "C" value and then
+    # Navigate to the next sibling span element for the price
+    element_with_c = driver.find_element(By.XPATH, '//span[@class="pane-legend-item-value-title pane-legend-line pane-legend-item-value-title__main" and text()="C"]')
+    price_element = element_with_c.find_element(By.XPATH, './following-sibling::span[@class="pane-legend-item-value pane-legend-line pane-legend-item-value__main"]')
+    closeValue = float(price_element.text)
+
+    return closeValue, adxValue, cciValue, rsiValue
 
 
 def moveByN(n):
@@ -146,11 +171,62 @@ def moveByN(n):
         time.sleep(pressInterval)
 
 
+def fillBuffer():
+    print("Filling buffer...")
+
+    for i in range(bufferLen):
+        close, adx, cci, rsi = getKline()
+
+        bufferPoint[0].append(close)
+        bufferPoint[1].append(adx)
+        bufferPoint[2].append(cci)
+        bufferPoint[3].append(rsi)
+
+        moveByN(1)
+
+    print("Done!\n")
+
+
+def logKline(sTime):
+    bufferPoint[0].pop(0)
+    bufferPoint[1].pop(0)
+    bufferPoint[2].pop(0)
+    bufferPoint[3].pop(0)
+
+    close, adx, cci, rsi = getKline()
+
+    bufferPoint[0].append(close)
+    bufferPoint[1].append(adx)
+    bufferPoint[2].append(cci)
+    bufferPoint[3].append(rsi)
+
+    # add the point to the data dict
+    # the buffer point must be copied to avoid references to the same buffer point
+    # data[label].append(copy.deepcopy(bufferPoint))
+    klines[strTime] = {"coords": bufferPoint[1] + bufferPoint[2] + bufferPoint[3], "close": bufferPoint[0][-1]}
+
+
 if __name__ == '__main__':
     driver = getDriver("https://www.investing.com/charts/futures-charts")
 
-    while running:
-        # get kline
-        # check the next klines
-        # log kline
-        pass
+    # wait for user to ready things up
+    input()
+
+    fillBuffer()
+    startTime += (bufferLen * timeIncrement)
+
+    klines = {}
+    lastTime = startTime
+
+    # while running:
+    for i in range(wantedNumOfKlines):
+        # get kline (close, adx, cci, rsi)
+        strTime = datetime.utcfromtimestamp(lastTime + 3600).strftime("%d-%m-%y %H:%M:%S")
+
+        logKline(strTime)
+        moveByN(1)
+
+        lastTime += timeIncrement
+
+    with open(f"GC15min.json", 'w') as json_file:
+        json.dump(klines, json_file)
