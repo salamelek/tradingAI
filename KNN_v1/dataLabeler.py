@@ -43,5 +43,114 @@ This will (should) label each kline automatically
         }
 """
 
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+import time
+import json
+import copy
+from datetime import date
+
+pressInterval = 0.2
+running = True
+# TODO choose a time format (idk about unix.. hard to read?)
+startTime = None
+
+# load a dict from a json file
+# with open('labeled_data/adx_cci_rsi_5min.json') as jsonFile:
+#     data = json.load(jsonFile)
+
+
+def getDriver(url):
+    options = webdriver.FirefoxOptions()
+    options.headless = False
+    myDriver = webdriver.Firefox(options=options)
+
+    myDriver.get(url)
+
+    try:
+        """
+        Attempts to connect to the given URL
+        It will also try to access nested iframes to get the HTML of the chart and thus its values
+        """
+
+        partial_id = "tvc_frame_"
+        parent_iframe = myDriver.find_element(By.XPATH, f'//iframe[contains(@id, "{partial_id}")]')
+        myDriver.switch_to.frame(parent_iframe)
+        partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/index60-prod.html"
+        iframe = myDriver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+        myDriver.switch_to.frame(iframe)
+        partial_src = "https://tvc-invdn-com.investing.com/web/1.12.34/static/tv-chart"
+        iframe = myDriver.find_element(By.XPATH, f'//iframe[contains(@src, "{partial_src}")]')
+
+        # Switch to the third iframe
+        myDriver.switch_to.frame(iframe)
+
+        return myDriver
+
+        # driver.page_source    # <-- get the raw HTML
+
+    except Exception as e:
+        print(f"An error occurred: \n\n{e}\n\n")
+        exit()
+
+
+def getIndicatorsValue():
+    """
+    ================================
+    IMPORTANT:
+    Set the ADX indicator to #FF0000
+    Set the CCI indicator to #808000
+    Set the RSI indicator to #800080
+    these are the defaults, so it should work without touching anything
+    ================================
+
+    :return:
+    """
+
+    class_name = "pane-legend-item-value"
+
+    adxColor = "rgb(255, 0, 0)"
+    cciColor = "rgb(128, 128, 0)"
+    rsiColor = "rgb(128, 0, 128)"
+
+    adxSelector = f".{class_name}[style*='color: {adxColor}']"
+    cciSelector = f".{class_name}[style*='color: {cciColor}']"
+    rsiSelector = f".{class_name}[style*='color: {rsiColor}']"
+
+    adxValue = float(driver.find_element(By.CSS_SELECTOR, adxSelector).text)
+    cciValue = float(driver.find_element(By.CSS_SELECTOR, cciSelector).text)
+    rsiValue = float(driver.find_element(By.CSS_SELECTOR, rsiSelector).text)
+
+    return adxValue, cciValue, rsiValue
+
+
+def moveByN(n):
+    # since we are tabbed in the terminal, we have to send the arrow press via selenium
+
+    for i in range(abs(n)):
+        if n > 0:
+            # -->
+            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ARROW_RIGHT)
+
+        elif n < 0:
+            # -->
+            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ARROW_LEFT)
+
+        else:
+            # shouldn't be needed but who cares
+            break
+
+        time.sleep(pressInterval)
+
+
 if __name__ == '__main__':
-    pass
+    driver = getDriver("https://www.investing.com/charts/futures-charts")
+
+    while running:
+        # get kline
+        # check the next klines
+        # log kline
+        pass
