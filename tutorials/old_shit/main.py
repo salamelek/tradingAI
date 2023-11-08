@@ -12,14 +12,14 @@ from keras.layers import Dense, Dropout, LSTM
 
 df = getDf("NVDA", "2023-01-1", "2023-04-1", "5min")
 
-# print(df.loc[1422, 'EMA_5_SLOPE'].item())
-# print(df.loc[1659, 'EMA_5_SLOPE'].item())
-# plot(df)
+# print(klinesDf.loc[1422, 'EMA_5_SLOPE'].item())
+# print(klinesDf.loc[1659, 'EMA_5_SLOPE'].item())
+# plot(klinesDf)
 # exit()
 
-# must be a df row of all the inputs
+# must be a klinesDf row of all the inputs
 # ema 5, 50, 100, 200 slope, macd slope and signal slope, macd distance, rsi
-# get the useful df
+# get the useful klinesDf
 
 trainData = pd.DataFrame(
     {
@@ -36,13 +36,13 @@ trainData = pd.DataFrame(
 )
 
 # remove any ema5 slope value that is more than 10 or less than -10
-# df = df.drop(df[abs(df['EMA_5_SLOPE']) > 10].index)
+# klinesDf = klinesDf.drop(klinesDf[abs(klinesDf['EMA_5_SLOPE']) > 10].index)
 # remove invalid values
 df.dropna()
 # reset index to avoid holes
 df = df.reset_index(drop=True)
 
-# normalize the df
+# normalize the klinesDf
 # this normalizes everything between 0 and 1
 # min and max values are dummies to set the max and min, so everything gets normalized normally
 minValue = -10
@@ -63,20 +63,20 @@ for index, row in normalizedTrainData.iterrows():
     if trimNValues < float(index) < (len(df.index) - 1):
         # append inputs
         xTrain.append(list(row))
-        # The train df should be growth %
+        # The train klinesDf should be growth %
         closePrice = df.loc[index, 'close'].item()
         nextClose = df.loc[index + 1, 'close'].item()
         yTrain.append((nextClose - closePrice) / closePrice)
 
 # print(len(yTrain))          # 1693
 # print(len(xTrain))          # 1693
-# print(len(df["close"]))     # 1895
+# print(len(klinesDf["close"]))     # 1895
 
 
 print(yTrain[1220])
 
 
-# Convert training df to np arrays
+# Convert training klinesDf to np arrays
 xTrain, yTrain = np.array(xTrain), np.array(yTrain)
 # I don't think I have to reshape this, so it's commented out
 # xTrain = np.reshape(xTrain, (xTrain.shape[0], xTrain.shape[1], 1))
@@ -113,5 +113,5 @@ model.fit(xTrain, yTrain, epochs=25, batch_size=32)
 prediction = model.predict(xTrain).flatten()
 
 
-# plotPredictionResults(list(df["close"]), prediction, trimNValues)
+# plotPredictionResults(list(klinesDf["close"]), prediction, trimNValues)
 comparePredictionWithTrainData(prediction, yTrain)

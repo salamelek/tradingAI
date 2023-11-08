@@ -104,7 +104,7 @@ def CCI(df, nDays):
 
 
 def getYfData():
-    print("Getting train df...")
+    print("Getting train klinesDf...")
 
     df = yf.download(stocks[0], interval="5m", start="2023-08-01", end="2023-09-01")
 
@@ -163,8 +163,8 @@ df = getYfData()[0]
 plt.plot(df["close"])
 plt.show()
 #
-# print(df["high"])
+# print(klinesDf["high"])
 #
 # print("\n\n\n\n\n")
 #
-# print(min(df[(df["high"] > 188) & (df["index"] > 1700)]["index"]))
+# print(min(klinesDf[(klinesDf["high"] > 188) & (klinesDf["index"] > 1700)]["index"]))

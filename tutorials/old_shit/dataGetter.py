@@ -4,10 +4,10 @@ import requests
 
 
 def getDf(symbol, start, end, period):
-    print("Getting df...")
+    print("Getting klinesDf...")
     os.environ["TIINGO_API_KEY"] = "c18a43200a4dde2d36f4a4986bd03bb70d92fd4d"
 
-    # Define the Tiingo API endpoint for 5-minute df
+    # Define the Tiingo API endpoint for 5-minute klinesDf
     url = f"https://api.tiingo.com/iex/{symbol}/prices"
 
     # Define the API parameters including the date range
@@ -29,7 +29,7 @@ def getDf(symbol, start, end, period):
     data = response.json()
     df = pd.DataFrame(data)
 
-    # drop useless df
+    # drop useless klinesDf
     df = df.drop('open', axis=1)
     df = df.drop('high', axis=1)
     df = df.drop('low', axis=1)
@@ -45,7 +45,7 @@ def getDf(symbol, start, end, period):
     df['EMA_100_SLOPE'] = df['EMA_100'].diff()
     df['EMA_200_SLOPE'] = df['EMA_200'].diff()
     # The first row of 'EMA_Slope' will be NaN, so you might want to fill it with 0 or another appropriate value
-    # df['EMA_5_SLOPE'].fillna(0, inplace=True)
+    # klinesDf['EMA_5_SLOPE'].fillna(0, inplace=True)
 
     # macd
     df["ema_short"] = df["close"].ewm(span=12, adjust=False).mean()

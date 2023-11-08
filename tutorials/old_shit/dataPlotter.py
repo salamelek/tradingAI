@@ -5,7 +5,7 @@ import numpy as np
 
 
 def plot(df):
-    print("Plotting df...")
+    print("Plotting klinesDf...")
 
     # Create a figure and multiple subplots
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(16, 10), sharex="all")
@@ -39,8 +39,8 @@ def plot(df):
 
     # Reduce the number of x-axis ticks and labels as shown in previous responses
     # num_ticks = 3  # Adjust this number to your preference
-    # step = len(df) // num_ticks
-    # xticks = df['date'][::step]
+    # step = len(klinesDf) // num_ticks
+    # xticks = klinesDf['date'][::step]
 
     # Set the x-axis ticks and labels for all subplots
     # ax1.set_xticks(xticks)
@@ -60,7 +60,7 @@ def plot(df):
 
 
 def plotPredictionResults(realPrice, prediction, trim):
-    print("Plotting df...")
+    print("Plotting klinesDf...")
 
     # pad the prediction
     prediction = np.concatenate((np.full(trim, prediction[0]), prediction))
@@ -69,7 +69,7 @@ def plotPredictionResults(realPrice, prediction, trim):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), sharex="all")
 
     # Plot the original 'close' price, EMAs, and RSI in the top subplot
-    ax1.plot(realPrice, label='Real price df', color='blue')
+    ax1.plot(realPrice, label='Real price klinesDf', color='blue')
     ax1.axvline(x=trim)
     ax1.set_ylabel('Price')
     ax1.grid()

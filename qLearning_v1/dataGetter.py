@@ -121,7 +121,7 @@ def getDataFromCsv():
 
 def getData():
     df = getDataFromCsv()
-    # df = getDataFromYf()
+    # klinesDf = getDataFromYf()
 
     # rsi
     rsiPeriod = 14
