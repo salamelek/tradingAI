@@ -149,7 +149,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(bullishADX, bullishCCI, bullishRSI, c='g', marker='o', label="Bullish")
 ax.scatter(bearishADX, bearishCCI, bearishRSI, c='r', marker='o', label="Bearish")
-# ax.scatter(rangingADX, rangingCCI, rangingRSI, c='y', marker='o', label="Ranging")
+ax.scatter(rangingADX, rangingCCI, rangingRSI, c='y', marker='o', label="Ranging")
 ax.scatter(testPoint[4], testPoint[9], testPoint[14], c='blue', marker="o", label="Test Point")
 # ax.scatter(12.7443, 98.2877, 58.7218, c='blue', marker="o", label="Test Point")
 

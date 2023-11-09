@@ -48,11 +48,20 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from loadingBar import progressBar
+
 
 xMin = 2
-xMax = 5
-yMin = 0.01
-chop = 5
+xMax = 96
+# the difference in price
+yMin = 5
+# FIXME try to find a better choppiness function, because this one is shit
+"""
+maybe instead of calculating the distance from the line, do the following:
+    if the line goes up, only calculate the distance of the values beneath it
+    if the line goes down, only calculate the distance of the values above it
+"""
+chopMax = 0.01
 
 
 with open("GC15min-01-01-23 00:00:00.json", "r") as jsonFile:
@@ -66,7 +75,7 @@ df.reset_index(drop=True, inplace=True)
 # fill buffer to speed things up
 checkList = []
 for i in range(xMax):
-    checkList.append(df["close"][i])
+    checkList.append(df["close"][i + 1])
 
 
 def getDistanceOfPointFromLine(p0, p1, p2):
@@ -80,29 +89,96 @@ def getDistanceOfPointFromLine(p0, p1, p2):
     return np.abs((p2[0] - p1[0]) * (p1[1] - p0[1]) - (p1[0] - p0[0]) * (p2[1] - p1[1])) / np.sqrt(((p2[0] - p1[0]) ** 2) + ((p2[1] - p1[1]) ** 2))
 
 
-def getAvgDistFromLine(series):
+def getChopOfSeries(series):
     if len(series) < 2:
         raise Exception("No enough values in series.")
 
     distances = []
     for i in range(len(series) - 1):
-        distances.append(getDistanceOfPointFromLine((i, series[i]), (0, series[0]), (len(series), series[-1])))
+        x1 = 0
+        y1 = series[x1]
+        x2 = len(series) - 1
+        y2 = series[x2]
+        xa = i
+        ya = series[xa]
 
-    return np.average(distances)
+        v1 = (x2 - x1, y2 - y1)  # Vector 1
+        v2 = (x2 - xa, y2 - ya)  # Vector 2
+        xp = v1[0] * v2[1] - v1[1] * v2[0]  # Cross product (magnitude)
+
+        rising = series[-1] - series[0] >= 0
+        above = xp < 0
+
+        # if the point is below and the series is rising
+        if not above and rising:
+            print('below')
+            distances.append(getDistanceOfPointFromLine((i, series[i]), (0, series[0]), (len(series) - 1, series[-1])))
+
+        if not above and not rising:
+            distances.append(0)
+
+        # if the point is above and the series is falling
+        if above and not rising:
+            print('above')
+            distances.append(getDistanceOfPointFromLine((i, series[i]), (0, series[0]), (len(series) - 1, series[-1])))
+
+        if above and rising:
+            distances.append(0)
+
+    print(distances)
+    return np.mean(distances)
 
 
-for i in range(xMax, len(df.index)):
-    # FIXME figure this shit out
-    print(i, checkList)
+print(getChopOfSeries([0, -0.5, 1]))
+exit()
+
+
+niceValues = []
+for i in range(xMax, len(df.index) - xMax):
     for j in range(xMin, xMax + 1):
-        print(j, checkList[j:i + 1], checkList[j:i])
-        # print(i, checkList[j:i + 1], getAvgDistFromLine(checkList[:j]))
+        y = np.abs(df["close"][i] - df["close"][i + j])
+        chop = getChopOfSeries(checkList[:j])
+
+        if y > yMin and chop < chopMax:
+            niceValues.append({"startKline": i, "targetKline": (i + j), "x": j, "y": y, "chop": chop})
 
     # update buffer
     checkList.pop(0)
     checkList.append(df["close"][i])
 
+    progressBar(i + 1, len(df.index) - xMax, f"Getting niceValues: ")
 
-df.plot()
+print()
+
+# filter out niceValues so only the best answer for each kline remains
+bestValues = []
+dictGroup = [niceValues[0]]
+for i in range(len(niceValues) - 1):
+    currDict = niceValues[i]
+    nextDict = niceValues[i + 1]
+
+    if currDict["startKline"] == nextDict["startKline"]:
+        dictGroup.append(nextDict)
+
+    else:
+        bestValues.append(max(dictGroup, key=lambda x: x['y']))
+        dictGroup = [nextDict]
+
+# print(niceValues)
+# print(bestValues)
+
+# plot price
+df.plot(color="black")
+
+# plot lines
+for point in bestValues:
+    xA = point["startKline"]
+    xB = point["targetKline"]
+
+    yA = df["close"][xA]
+    yB = df["close"][xB]
+
+    plt.plot([xA, xB], [yA, yB], linestyle="dashed", marker='x', label='Line AB')
+
 plt.grid()
 plt.show()

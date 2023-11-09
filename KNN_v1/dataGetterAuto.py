@@ -20,7 +20,7 @@ from loadingBar import progressBar
 pressInterval = 0.3
 datetime_str = "01-05-23 00:00:00"
 timeIncrement = 15 * 60
-wantedNumOfKlines = 1000
+wantedNumOfKlines = 25
 
 running = True
 
