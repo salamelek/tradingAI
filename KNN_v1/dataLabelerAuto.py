@@ -78,15 +78,19 @@ for i in range(xMax):
     checkList.append(df["close"][i + 1])
 
 
-def getDistanceOfPointFromLine(p0, p1, p2):
+def getDistanceOfPointFromLine(x0, y0, x1, y1, x2, y2):
     """
-    :param p0: the point that we care about
-    :param p1: point 1 that defines the line
-    :param p2: point 2 that defines the line
+    :param x0:
+    :param y0:
+    :param x1:
+    :param y1:
+    :param x2:
+    :param y2:
     :return:
     """
-
-    return np.abs((p2[0] - p1[0]) * (p1[1] - p0[1]) - (p1[0] - p0[0]) * (p2[1] - p1[1])) / np.sqrt(((p2[0] - p1[0]) ** 2) + ((p2[1] - p1[1]) ** 2))
+    a = np.abs(((x2 - x1) * (y1 - y0)) - ((x1 - x0) * (y2 - y1)))
+    b = np.sqrt(((x2 - x1) ** 2) + ((y2 - y1) ** 2))
+    return a / b
 
 
 def getChopOfSeries(series):
@@ -94,7 +98,7 @@ def getChopOfSeries(series):
         raise Exception("No enough values in series.")
 
     distances = []
-    for i in range(len(series) - 1):
+    for i in range(len(series)):
         x1 = 0
         y1 = series[x1]
         x2 = len(series) - 1
@@ -112,7 +116,7 @@ def getChopOfSeries(series):
         # if the point is below and the series is rising
         if not above and rising:
             print('below')
-            distances.append(getDistanceOfPointFromLine((i, series[i]), (0, series[0]), (len(series) - 1, series[-1])))
+            distances.append(getDistanceOfPointFromLine(i, series[i], 0, series[0], len(series) - 1, series[-1]))
 
         if not above and not rising:
             distances.append(0)
@@ -120,7 +124,7 @@ def getChopOfSeries(series):
         # if the point is above and the series is falling
         if above and not rising:
             print('above')
-            distances.append(getDistanceOfPointFromLine((i, series[i]), (0, series[0]), (len(series) - 1, series[-1])))
+            distances.append(getDistanceOfPointFromLine(i, series[i], 0, series[0], len(series) - 1, series[-1]))
 
         if above and rising:
             distances.append(0)
