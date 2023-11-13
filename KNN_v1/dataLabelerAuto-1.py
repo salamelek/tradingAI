@@ -88,12 +88,9 @@ def getDistanceOfPointFromLine(x0, y0, x1, y1, x2, y2):
     :param y2:
     :return:
     """
-    # a = np.abs(((x2 - x1) * (y1 - y0)) - ((x1 - x0) * (y2 - y1)))
-    # b = np.sqrt(((x2 - x1) ** 2) + ((y2 - y1) ** 2))
-    # return a / b
-    numerator = abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1)
-    denominator = np.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2)
-    distance = numerator / denominator
+    a = np.abs((y2 - y1) * x0 + (x1 - x2) * y0 - x1 * y2 + x2 * y1)
+    b = np.sqrt((y2 - y1) ** 2 + (x1 - x2) ** 2)
+    distance = a / b
     return distance
 
 
@@ -119,7 +116,7 @@ def getChopOfSeries(series):
 
         # if the point is below and the series is rising
         if not above and rising:
-            print('below')
+            # print('below')
             distances.append(getDistanceOfPointFromLine(i, series[i], 0, series[0], len(series) - 1, series[-1]))
 
         if not above and not rising:
@@ -127,27 +124,33 @@ def getChopOfSeries(series):
 
         # if the point is above and the series is falling
         if above and not rising:
-            print('above')
+            # print('above')
             distances.append(getDistanceOfPointFromLine(i, series[i], 0, series[0], len(series) - 1, series[-1]))
 
         if above and rising:
             distances.append(0)
 
-    print(distances)
-    return np.mean(distances)
+    distances.pop(0)
+    distances.pop(-1)
+    # print(distances)
+    if len(distances):
+        return np.mean(distances)
+    else:
+        return 0
 
 
-print(getChopOfSeries([0, -0.5, 1]))
-exit()
+# print(getChopOfSeries([0, -1, -1, 0]))
+# exit()
 
 
 niceValues = []
+# niceValues are all the values where the conditions are met
 for i in range(xMax, len(df.index) - xMax):
     for j in range(xMin, xMax + 1):
         y = np.abs(df["close"][i] - df["close"][i + j])
         chop = getChopOfSeries(checkList[:j])
 
-        if y > yMin and chop < chopMax:
+        if y >= yMin and chop <= chopMax:
             niceValues.append({"startKline": i, "targetKline": (i + j), "x": j, "y": y, "chop": chop})
 
     # update buffer
@@ -156,37 +159,5 @@ for i in range(xMax, len(df.index) - xMax):
 
     progressBar(i + 1, len(df.index) - xMax, f"Getting niceValues: ")
 
-print()
-
-# filter out niceValues so only the best answer for each kline remains
-bestValues = []
-dictGroup = [niceValues[0]]
-for i in range(len(niceValues) - 1):
-    currDict = niceValues[i]
-    nextDict = niceValues[i + 1]
-
-    if currDict["startKline"] == nextDict["startKline"]:
-        dictGroup.append(nextDict)
-
-    else:
-        bestValues.append(max(dictGroup, key=lambda x: x['y']))
-        dictGroup = [nextDict]
-
-# print(niceValues)
-# print(bestValues)
-
-# plot price
-df.plot(color="black")
-
-# plot lines
-for point in bestValues:
-    xA = point["startKline"]
-    xB = point["targetKline"]
-
-    yA = df["close"][xA]
-    yB = df["close"][xB]
-
-    plt.plot([xA, xB], [yA, yB], linestyle="dashed", marker='x', label='Line AB')
-
-plt.grid()
-plt.show()
+with open("niceValues.json", "w") as toBeJsonFile:
+    json.dump(niceValues, toBeJsonFile)
