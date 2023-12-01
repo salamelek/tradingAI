@@ -39,22 +39,186 @@ OPTIMISATION
 """
 
 import json
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+from KNN_v1.loadingBar import progressBar
 
 
-# let's load the data that we stole
-with open("GC15min-01-01-23 00:00:00.json", "r") as jsonFile:
-    data = json.load(jsonFile)
-
-# convert the data into a pandas df
-df = pd.DataFrame.from_dict(data, orient='index')
-df.columns = ['close', 'coords']
-df.insert(0, "timestamp", df.index)
-df.reset_index(drop=True, inplace=True)
-
-
-# TODO
 """
-next thing to do is to find a nice and fast way to detect slopes using the said
+THE MAIN PARAMETERS
+
+xMin    [int]   : number of minimum klines for a slope
+xMax    [int]   : number of maximum klines for a slope
+yMin    [float] : the minimum change in % (0.11 = 11%)
+mMax    [int]   : the maximum allowed slope of a slope
+chopMax [float] : the maximum allowed chop (still have to see the range of values)
 """
-# TODO
+xMin = 5
+xMax = 50
+yMin = 0.005
+mMax = 15
+chopMax = 1
+
+
+def getDf():
+    # let's load the data that we stole
+    with open("GC15min-01-01-23 00:00:00.json", "r") as jsonFile:
+        data = json.load(jsonFile)
+
+    # convert the data into a pandas df
+    df = pd.DataFrame.from_dict(data, orient='index')
+    df.columns = ['close', 'coords']
+    df.insert(0, "timestamp", df.index)
+    df.reset_index(drop=True, inplace=True)
+
+    return df[:-1]
+
+
+def plot(df, slopes):
+    # plot the price
+    df.plot(color="black")
+
+    # plot the slopes
+    for slope in slopes:
+        Ax = slope["xStart"]
+        Ay = slope["yStart"]
+        Bx = slope["xEnd"]
+        By = slope["yEnd"]
+
+        plt.plot([Ax, Bx], [Ay, By], linestyle="dashed", marker='x')
+
+    plt.grid()
+    plt.show()
+
+
+def getDistanceOfPointFromLine(xPoint, yPoint, x1, y1, x2, y2):
+    """
+    Returns the distance of the point x0 y0 to the line defined by the two points
+
+    :param xPoint: X coord of the point
+    :param yPoint: Y coord of the point
+    :param x1: X coord of the first point defining the line
+    :param y1: Y coord of the first point defining the line
+    :param x2: X coord of the second point defining the line
+    :param y2: Y coord of the second point defining the line
+    :return:
+    """
+
+    a = np.abs((y2 - y1) * xPoint + (x1 - x2) * yPoint - x1 * y2 + x2 * y1)
+    b = np.sqrt((y2 - y1) ** 2 + (x1 - x2) ** 2)
+    distance = a / b
+
+    return distance
+
+
+def getChopOfSeries(series):
+    """
+    x: time
+    y: price
+    A: open position
+    N1, N2, ..., NK: all the values between A and B
+    B: close position
+
+    5.1) sum(dist(line, N1), dist(line, N2), ..., dist(line, NK)) / K
+
+    the series must be at least 3 long, since
+    series[0] and series[-1] are not considered in the average
+
+    :param series:
+    :return:
+    """
+
+    # just make sure that it's a list
+    series = list(series)
+
+    if len(series) < 3:
+        print(series)
+        raise Exception("No enough values in series!")
+
+    totChop = 0
+
+    x1 = 0
+    y1 = series[x1]
+    x2 = len(series) - 1
+    y2 = series[x2]
+
+    for i in range(len(series[1:-1])):
+        xPoint = i + 1
+        yPoint = series[xPoint]
+        totChop += getDistanceOfPointFromLine(xPoint, yPoint, x1, y1, x2, y2)
+
+    return totChop / len(series[1:-1])
+
+
+def getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax):
+    """
+    x: time
+    y: price
+    A: open position
+    N1, N2, ..., NK: all the values between A and B
+    B: close position
+
+    1) Bx - Ax >= xMin
+    2) Bx - Ax <= xMax
+    3) By - Ay >= yMin
+    4) (By - Ay) / (Bx - Ax) <= mMax
+    5.1) sum(dist(line, N1), dist(line, N2), ..., dist(line, NK)) / K
+
+    :param df:
+    :param xMin:
+    :param xMax:
+    :param yMin:
+    :param mMax:
+    :param chopMax:
+    :return:
+    """
+
+    slopesList = []
+
+    for Ax in range(len(df["close"]) - xMax):
+        for Bx in range(Ax + xMin, Ax + xMax):
+            # let's check each condition in the inverse way, to speed things up
+            # xMin and xMax are taken care of by the specified range
+
+            Ay = df["close"][Ax]
+            By = df["close"][Bx]
+
+            # yMin (remember that its in %)
+            # it's abs because it's good in both directions
+            yChange = abs((By - Ay) / Ay)
+            if yChange < yMin:
+                continue
+
+            # mMax
+            if (By - Ay) / (Bx - Ax) > mMax:
+                continue
+
+            # chop3
+            chop = getChopOfSeries(df["close"][Ax:Bx + 1])
+            if chop > chopMax:
+                continue
+
+            # if the code arrives here, it means that we got a slope :D
+            slopesList.append({
+                "xStart": Ax,
+                "xEnd": Bx,
+                "yStart": Ay,
+                "yEnd": By,
+                "yChange": yChange,
+                "chop": chop
+            })
+
+        progressBar(Ax + 1, len(df.index) - xMax, f"Getting slopes (got {len(slopesList)}): ")
+
+    return slopesList
+
+
+if __name__ == '__main__':
+    df = getDf()
+
+    slopes = getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax)
+
+    plot(df, slopes)
+

@@ -17,7 +17,7 @@ with open("niceValues.json", "r") as jsonFile:
 """
 niceValues are all the positions between xMin and xax that have at least yMin of %change
 
-I split the dataLabeler in two files so the first one that does the heavy work just fills a dict
+I split the dataLabelerOld in two files so the first one that does the heavy work just fills a dict
 So this one, the second, can use the already processed data so i won't have to do that every time
 
 Now i only need to find the optimal 
