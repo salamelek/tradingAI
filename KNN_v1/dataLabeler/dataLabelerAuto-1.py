@@ -48,7 +48,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from loadingBar import progressBar
+from KNN_v1.loadingBar import progressBar
 
 
 xMin = 2
