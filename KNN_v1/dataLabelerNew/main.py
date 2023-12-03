@@ -56,9 +56,10 @@ mMax    [int]   : the maximum allowed slope of a slope
 chopMax [float] : the maximum allowed chop (still have to see the range of values)
 """
 xMin = 5
-xMax = 50
+xMax = 100
 yMin = 0.005
-mMax = 15
+# TODO maybe rethink how to measure this thing here
+mMax = 2
 chopMax = 1
 
 
@@ -81,11 +82,11 @@ def plot(df, slopes):
     df.plot(color="black")
 
     # plot the slopes
-    for slope in slopes:
-        Ax = slope["xStart"]
-        Ay = slope["yStart"]
-        Bx = slope["xEnd"]
-        By = slope["yEnd"]
+    for key in slopes.keys():
+        Ax = slopes[key]["xStart"]
+        Ay = slopes[key]["yStart"]
+        Bx = slopes[key]["xEnd"]
+        By = slopes[key]["yEnd"]
 
         plt.plot([Ax, Bx], [Ay, By], linestyle="dashed", marker='x')
 
@@ -175,7 +176,7 @@ def getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax):
     :return:
     """
 
-    slopesList = []
+    slopesDict = {}
 
     for Ax in range(len(df["close"]) - xMax):
         for Bx in range(Ax + xMin, Ax + xMax):
@@ -201,18 +202,56 @@ def getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax):
                 continue
 
             # if the code arrives here, it means that we got a slope :D
-            slopesList.append({
+            slopesDict[Ax] = {
                 "xStart": Ax,
                 "xEnd": Bx,
                 "yStart": Ay,
                 "yEnd": By,
                 "yChange": yChange,
                 "chop": chop
-            })
+            }
 
-        progressBar(Ax + 1, len(df.index) - xMax, f"Getting slopes (got {len(slopesList)}): ")
+        progressBar(Ax + 1, len(df.index) - xMax, f"Getting slopes (got {len(slopesDict.keys())}): ")
 
-    return slopesList
+    return slopesDict
+
+
+def getLabeledData(df, slopes):
+    """
+    This function takes the dataFrame alongside the slopes dict and labels the coordinates to the action
+    Hold: 0
+    Sell: -1
+    Buy: 1
+    The dict will store values as such:
+    labeledData = {
+        0: 0,
+        1: 1,
+        2: -1,
+        3: 0,
+        ...
+    }
+    The key of the dict is the index of the kline
+
+    :param df:
+    :param slopes:
+    :return:
+    """
+    labeledData = {}
+
+    for i in range(len(df["coords"])):
+        # check if there is a slope starting at time i
+        if i not in slopes.keys():
+            labeledData[i] = 0
+            continue
+
+        # check if the slope is rising or falling
+        if slopes[i]["yStart"] > slopes[i]["yEnd"]:
+            labeledData[i] = -1
+
+        else:
+            labeledData[i] = 1
+
+    return labeledData
 
 
 if __name__ == '__main__':
@@ -220,5 +259,9 @@ if __name__ == '__main__':
 
     slopes = getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax)
 
-    plot(df, slopes)
+    # export the labeled data
+    labeledData = getLabeledData(df, slopes)
 
+    print(labeledData)
+
+    plot(df, slopes)
