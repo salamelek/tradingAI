@@ -62,10 +62,12 @@ yMin = 0.005
 mMax = 2
 chopMax = 1
 
+klineFile = "GC15min-01-01-23 00:00:00.json"
+
 
 def getDf():
     # let's load the data that we stole
-    with open("GC15min-01-01-23 00:00:00.json", "r") as jsonFile:
+    with open(f"klineData/{klineFile}", "r") as jsonFile:
         data = json.load(jsonFile)
 
     # convert the data into a pandas df
@@ -254,6 +256,18 @@ def getLabeledData(df, slopes):
     return labeledData
 
 
+def exportData(data, name):
+    """
+    This function saves the given data to a json file with the given name
+
+    :param data:
+    :param name:
+    :return:
+    """
+    with open(f"./labeled_data/autoLabeled-{name}", "w") as jsonFile:
+        json.dump(data, jsonFile)
+
+
 if __name__ == '__main__':
     df = getDf()
 
@@ -262,6 +276,6 @@ if __name__ == '__main__':
     # export the labeled data
     labeledData = getLabeledData(df, slopes)
 
-    print(labeledData)
+    exportData(labeledData, klineFile)
 
     plot(df, slopes)

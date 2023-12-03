@@ -9,7 +9,7 @@ k = 2
 wantedIndex = -1
 
 
-with open('labeled_data/2023-10-23-15min-adx-cci-rsi-5-test1.json') as jsonFile:
+with open('labeled_data/hand-2023-10-23-15min-adx-cci-rsi-5-test1.json') as jsonFile:
     data = json.load(jsonFile)
 
 
