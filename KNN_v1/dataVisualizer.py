@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-df = pd.read_json("./labeled_data/autoLabeledDf-GC15min-01-01-23 00:00:00.json.json")
+df = pd.read_json("labeled_data/autoLabeledDf-GC15min-01-01-23 00:00:00.json")
 
 
 ranging = df.loc[df['label'] == 0]

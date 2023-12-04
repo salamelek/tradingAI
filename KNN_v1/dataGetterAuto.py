@@ -11,16 +11,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 import time
-import json
-import copy
+import pandas as pd
 from datetime import datetime
 
 from loadingBar import progressBar
 
 pressInterval = 0.3
-datetime_str = "01-05-23 00:00:00"
+datetime_str = "27-11-23 00:00:00"
 timeIncrement = 15 * 60
-wantedNumOfKlines = 25
+wantedNumOfKlines = 500
 
 running = True
 
@@ -187,5 +186,11 @@ if __name__ == '__main__':
 
         progressBar(i + 1, wantedNumOfKlines, f"Stealing data... ")
 
-    with open(f"GC15min-{datetime_str}.json", 'w') as json_file:
-        json.dump(klines, json_file)
+    # convert the data to a df
+    df = pd.DataFrame.from_dict(klines, orient='index')
+    df.columns = ['close', 'coords']
+    df.insert(0, "timestamp", df.index)
+    df.reset_index(drop=True, inplace=True)
+
+    # export the df to a json file
+    df.to_json(rf'./klineData/df-GC15min-{datetime_str}.json')

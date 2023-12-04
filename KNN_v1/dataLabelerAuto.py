@@ -247,7 +247,7 @@ def getLabeledData(df, slopes):
             labels.append(1)
 
     df["label"] = labels
-    # TODO drop all the same values
+    # do NOT drop rows with same coords!
 
     return df
 
@@ -259,6 +259,6 @@ if __name__ == '__main__':
 
     # export the labeled data
     labeledDf = getLabeledData(df, slopes)
-    df.to_json(rf'./labeled_data/autoLabeledDf-{klineFile}.json')
+    df.to_json(rf'./labeled_data/autoLabeledDf-{klineFile}')
 
     plot(df, slopes)
