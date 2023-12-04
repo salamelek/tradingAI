@@ -220,52 +220,36 @@ def getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax):
 
 def getLabeledData(df, slopes):
     """
-    This function takes the dataFrame alongside the slopes dict and labels the coordinates to the action
+    This function takes the dataFrame alongside the slopes dict and labels each kline in the dataframe
     Hold: 0
     Sell: -1
     Buy: 1
-    The dict will store values as such:
-    labeledData = {
-        0: 0,
-        1: 1,
-        2: -1,
-        3: 0,
-        ...
-    }
     The key of the dict is the index of the kline
 
     :param df:
     :param slopes:
     :return:
     """
-    labeledData = {}
+
+    labels = []
 
     for i in range(len(df["coords"])):
         # check if there is a slope starting at time i
         if i not in slopes.keys():
-            labeledData[i] = 0
+            labels.append(0)
             continue
 
         # check if the slope is rising or falling
         if slopes[i]["yStart"] > slopes[i]["yEnd"]:
-            labeledData[i] = -1
+            labels.append(-1)
 
         else:
-            labeledData[i] = 1
+            labels.append(1)
 
-    return labeledData
+    df["label"] = labels
+    # TODO drop all the same values
 
-
-def exportData(data, name):
-    """
-    This function saves the given data to a json file with the given name
-
-    :param data:
-    :param name:
-    :return:
-    """
-    with open(f"./labeled_data/autoLabeled-{name}", "w") as jsonFile:
-        json.dump(data, jsonFile)
+    return df
 
 
 if __name__ == '__main__':
@@ -274,8 +258,7 @@ if __name__ == '__main__':
     slopes = getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax)
 
     # export the labeled data
-    labeledData = getLabeledData(df, slopes)
-
-    exportData(labeledData, klineFile)
+    labeledDf = getLabeledData(df, slopes)
+    df.to_json(rf'./labeled_data/autoLabeledDf-{klineFile}.json')
 
     plot(df, slopes)
