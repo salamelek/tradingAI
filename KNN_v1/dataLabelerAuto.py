@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from KNN_v1.loadingBar import progressBar
+from KNN_v1.loadingBar import loadingBar
 
 
 """
@@ -213,7 +213,7 @@ def getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax):
                 "chop": chop
             }
 
-        progressBar(Ax + 1, len(df.index) - xMax, f"Getting slopes (got {len(slopesDict.keys())}): ")
+        loadingBar(Ax + 1, len(df.index) - xMax, f"Getting slopes (got {len(slopesDict.keys())}): ")
 
     return slopesDict
 

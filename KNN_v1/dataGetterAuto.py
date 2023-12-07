@@ -14,7 +14,7 @@ import time
 import pandas as pd
 from datetime import datetime
 
-from loadingBar import progressBar
+from loadingBar import loadingBar
 
 pressInterval = 0.3
 datetime_str = "27-11-23 00:00:00"
@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
         lastTime += timeIncrement
 
-        progressBar(i + 1, wantedNumOfKlines, f"Stealing data... ")
+        loadingBar(i + 1, wantedNumOfKlines, f"Stealing data... ")
 
     # convert the data to a df
     df = pd.DataFrame.from_dict(klines, orient='index')

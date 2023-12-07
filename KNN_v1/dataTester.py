@@ -3,10 +3,13 @@ This program will use labeled data to guess on new data.
 It will draw a chart of the given price action with indicators on where to open a position
 """
 
+import time
+
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from KNN_v1.loadingBar import progressBar
+from KNN_v1.loadingBar import loadingBar
 
 
 k = 1
@@ -19,6 +22,27 @@ newDf = pd.read_json("klineData/df-GC15min-27-11-23 00:00:00.json")
 # for each point in the new df calculate the closest k neighbours
 counter = 1
 guessedLabels = []
+
+# TODO
+"""
+Try setting (0, 0) around the point of interest and shift every other point accordingly.
+Then take in consideration only the points that are somewhat close to the center
+
+1) shift every point accordingly
+2) select a threshold t
+3) calculate the distance of each point that is within t
+4) check if there are enough values (if not, go to 2, if yes continue)
+5) sort the values and get the first k
+"""
+for i in range(len(newDf["coords"])):
+    coords = newDf["coords"][i]
+
+    # shift every point
+    centeredLabeledDf = labeledDf["coords"] - coords
+
+
+# TODO
+
 for coords in newDf["coords"]:
     distList = []
     for i in range(len(labeledDf["coords"])):
@@ -27,26 +51,21 @@ for coords in newDf["coords"]:
     sortedDistList = sorted(distList, key=lambda x: x[0])
     closestKNP = sortedDistList[:k]
 
-    # find the most common label
-    holdCount, shortCount, longCount = 0, 0, 0
+    labelsSum = 0
     for closePoint in closestKNP:
-        if closePoint[1] == 0:
-            holdCount += 1
-        elif closePoint[1] == 1:
-            longCount += 1
-        elif closePoint[1] == -1:
-            shortCount += 1
+        labelsSum += closePoint[1]
+    labelsAvg = labelsSum / k
 
-    if holdCount >= shortCount and holdCount >= longCount:
+    if abs(labelsAvg) <= 0.5:
         guessedLabels.append(0)
 
-    elif shortCount > holdCount and shortCount > longCount:
-        guessedLabels.append(-1)
-
-    elif longCount > shortCount and longCount > holdCount:
+    elif labelsAvg > 0.5:
         guessedLabels.append(1)
 
-    progressBar(counter, len(newDf.index), f"Calculating distances...")
+    elif labelsAvg < 0.5:
+        guessedLabels.append(-1)
+
+    loadingBar(counter + 1, len(newDf.index), f"Calculating distances...")
     counter += 1
 
 print()
@@ -56,7 +75,7 @@ longY = []
 shortX = []
 shortY = []
 for i in range(len(guessedLabels)):
-    print(f"{i}: {guessedLabels[i]}")
+    # print(f"{i}: {guessedLabels[i]}")
     if guessedLabels[i] == 1:
         longX.append(i)
         longY.append(newDf["close"][i])
