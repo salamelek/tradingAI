@@ -26,15 +26,12 @@ for point in labeledCoords["coords"]:
     print(f"{point}: {round(getDist(point), 2)}")
 
 # plot
-
 coordsX = []
 coordsY = []
 
 for coord in labeledCoords["coords"]:
     coordsX.append(coord[0])
     coordsY.append(coord[1])
-
-fig, ax = plt.subplots()
 
 plt.axhline(y=0, color='k')
 plt.axvline(x=0, color='k')
