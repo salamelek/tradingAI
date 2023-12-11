@@ -1,8 +1,10 @@
 """
-This will (should) label each kline automatically
-It will run in two phases:
-1) Getting all the klines
-2) Identifying the slopes
+dataGetterAuto.py
+
+Upon running, it will open a dummy browser, on investing.com
+Upon accepting all the cookies, the user will set up the wanted chart with the following indicators:
+adx, cci, rsi
+TODO think about those 15 coords... maybe just use 3 and the slope of ema5? who knows...
 """
 
 

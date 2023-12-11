@@ -53,7 +53,7 @@ xMin    [int]   : number of minimum klines for a slope
 xMax    [int]   : number of maximum klines for a slope
 yMin    [float] : the minimum change in % (0.11 = 11%)
 mMax    [int]   : the maximum allowed slope of a slope
-chopMax [float] : the maximum allowed chop (still have to see the range of values)
+chopMax [float] : the maximum allowed chop (1 seems about good?)
 """
 xMin = 5
 xMax = 100
@@ -62,26 +62,17 @@ yMin = 0.005
 mMax = 2
 chopMax = 1
 
-klineFile = "GC15min-01-01-23 00:00:00.json"
+klineFile = "df-GC15min-01-09-23 00:00:00.json"
 
 
 def getDf():
     # let's load the data that we stole
-    with open(f"klineData/{klineFile}", "r") as jsonFile:
-        data = json.load(jsonFile)
-
-    # convert the data into a pandas df
-    df = pd.DataFrame.from_dict(data, orient='index')
-    df.columns = ['close', 'coords']
-    df.insert(0, "timestamp", df.index)
-    df.reset_index(drop=True, inplace=True)
-
-    return df[:-1]
+    return pd.read_json(f"klineData/{klineFile}")
 
 
 def plot(df, slopes):
     # plot the price
-    df.plot(color="black")
+    df["close"].plot(color="black")
 
     # plot the slopes
     for key in slopes.keys():
