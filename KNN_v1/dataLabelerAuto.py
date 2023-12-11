@@ -38,7 +38,6 @@ OPTIMISATION
     and then refine the search. E.g.: first eliminate the values that can't reach yMin within xMax, then calculate the chop
 """
 
-import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
