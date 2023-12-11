@@ -39,10 +39,10 @@ OPTIMISATION
 """
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 from KNN_v1.loadingBar import loadingBar
+from binanceDataReader import getCryptoDf
 
 
 """
@@ -56,17 +56,19 @@ chopMax [float] : the maximum allowed chop (1 seems about good?)
 """
 xMin = 5
 xMax = 100
-yMin = 0.005
+yMin = 0.05
 # TODO maybe rethink how to measure this thing here
 mMax = 2
-chopMax = 1
+chopMax = 3
 
-klineFile = "df-GC15min-01-09-23 00:00:00.json"
+# klineFile = "df-GC15min-01-09-23 00:00:00.json"
+klineFile = "ETHUSDT-15m-2020.csv"
 
 
 def getDf():
     # let's load the data that we stole
-    return pd.read_json(f"klineData/{klineFile}")
+    # return pd.read_json(f"klineData/{klineFile}")
+    return getCryptoDf()
 
 
 def plot(df, slopes):
@@ -223,7 +225,7 @@ def getLabeledData(df, slopes):
 
     labels = []
 
-    for i in range(len(df["coords"])):
+    for i in range(len(df["close"])):
         # check if there is a slope starting at time i
         if i not in slopes.keys():
             labels.append(0)
