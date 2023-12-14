@@ -1,6 +1,8 @@
+import copy
+
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from itertools import chain
 
 
 def calculate_mad(arr):
@@ -82,6 +84,50 @@ def getCCI(df, period):
     return df
 
 
+def setCoords(df):
+    """
+    THis will set the coords to the "old" 5 points for each indicator
+
+    :param df:
+    :return:
+    """
+
+    # adx, cci, rsi
+    bufferPoint = [[], [], []]
+
+    bufferLen = 5
+    for i in range(bufferLen):
+        bufferPoint[0].append(df["adx"][i])
+        bufferPoint[1].append(df["cci"][i])
+        bufferPoint[2].append(df["rsi"][i])
+
+    coords = [np.nan, np.nan, np.nan, np.nan, np.nan]
+
+    for j in range(bufferLen, len(df["close"])):
+        flatList = []
+        for lst in bufferPoint:
+            for sub in lst:
+                flatList.append(sub)
+
+        coords.append(copy.deepcopy(flatList))
+
+        bufferPoint[0].pop(0)
+        bufferPoint[1].pop(0)
+        bufferPoint[2].pop(0)
+
+        bufferPoint[0].append(df["adx"][j])
+        bufferPoint[1].append(df["cci"][j])
+        bufferPoint[2].append(df["rsi"][j])
+
+    df["coords"] = coords
+
+    df = df.drop(index=range(5))
+
+    df = df.reset_index(drop=True)
+
+    return df
+
+
 def getCryptoDf(pair="ETHUSDT", interval="15m", year=2020):
     fileString = f"../cryptoData/{pair}-{interval}-{year}.csv"
 
@@ -94,5 +140,7 @@ def getCryptoDf(pair="ETHUSDT", interval="15m", year=2020):
 
     df = df.dropna()
     df = df.reset_index(drop=True)
+
+    df = setCoords(df)
 
     return df
