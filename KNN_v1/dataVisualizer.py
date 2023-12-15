@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 # df = pd.read_json("labeled_data/autoLabeledDf-GC15min-01-01-23 00:00:00.json")
-df = pd.read_json("labeled_data/autoLabeledDf-ETHUSDT-15m-2020.json")
+df = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json")
 
 
 ranging = df.loc[df['label'] == 0]
@@ -23,5 +23,9 @@ ax.scatter(bearish["coords"].apply(lambda x: x[a]), bearish["coords"].apply(lamb
 ax.set_xlabel("ADX")
 ax.set_ylabel("CCI")
 ax.set_zlabel("RSI")
+
+print("ranging", len(ranging))
+print("bullish", len(bullish))
+print("bearish", len(bearish))
 
 plt.show()

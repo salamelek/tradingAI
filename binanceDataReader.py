@@ -2,7 +2,6 @@ import copy
 
 import numpy as np
 import pandas as pd
-from itertools import chain
 
 
 def calculate_mad(arr):
@@ -128,10 +127,13 @@ def setCoords(df):
     return df
 
 
-def getCryptoDf(pair="ETHUSDT", interval="15m", year=2020):
-    fileString = f"../cryptoData/{pair}-{interval}-{year}.csv"
+def getCryptoDf(filePath=""):
+    print("Calculating all the df coords...")
 
-    df = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
+    fileString = f"../cryptoData/{filePath}"
+
+    # df = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
+    df = pd.read_csv(fileString)
 
     # here calculate all the necessary indicators and calculate coords
     df = getADX(df, 14)
@@ -142,5 +144,7 @@ def getCryptoDf(pair="ETHUSDT", interval="15m", year=2020):
     df = df.reset_index(drop=True)
 
     df = setCoords(df)
+
+    print("Done!")
 
     return df

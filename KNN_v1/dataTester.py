@@ -8,17 +8,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from KNN_v1.loadingBar import loadingBar
+from binanceDataReader import getCryptoDf
 
 # k number of closest points
 k = 1
 # threshold for dividing the space
-startT = 40
+startT = 200
 # by how much will the threshold increase each iteration
-tk = 20
+tk = 100
 
-labeledDf = pd.read_json("labeled_data/autoLabeledDf-GC15min-01-01-23 00:00:00.json")
-newDf = pd.read_json("klineData/df-GC15min-01-09-23 00:00:00.json")
-
+labeledDf = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json")
+# newDf = pd.read_json("klineData/df-GC15min-01-09-23 00:00:00.json")
+newDf = getCryptoDf("/2023-data/MERGED-ETHUSDT-15m-23.csv")
 
 print(f"""
 -- Testing Data --
