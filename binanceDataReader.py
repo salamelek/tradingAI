@@ -128,11 +128,11 @@ def setCoords(df):
 
 
 def getCryptoDf(filePath=""):
-    print("Calculating all the df coords...")
+    print("Calculating all the labeledDf coords...")
 
     fileString = f"../cryptoData/{filePath}"
 
-    # df = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
+    # labeledDf = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
     df = pd.read_csv(fileString)
 
     # here calculate all the necessary indicators and calculate coords

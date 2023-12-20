@@ -188,11 +188,11 @@ if __name__ == '__main__':
 
         loadingBar(i + 1, wantedNumOfKlines, f"Stealing data... ")
 
-    # convert the data to a df
+    # convert the data to a labeledDf
     df = pd.DataFrame.from_dict(klines, orient='index')
     df.columns = ['close', 'coords']
     df.insert(0, "timestamp", df.index)
     df.reset_index(drop=True, inplace=True)
 
-    # export the df to a json file
+    # export the labeledDf to a json file
     df.to_json(rf'./klineData/df-GC15min-{datetime_str}.json')

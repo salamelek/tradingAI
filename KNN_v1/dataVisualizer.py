@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# df = pd.read_json("labeled_data/autoLabeledDf-GC15min-01-01-23 00:00:00.json")
+# labeledDf = pd.read_json("labeled_data/autoLabeledDf-GC15min-01-01-23 00:00:00.json")
 df = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json")
 
 

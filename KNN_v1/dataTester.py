@@ -18,7 +18,7 @@ startT = 200
 tk = 100
 
 labeledDf = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json")
-# newDf = pd.read_json("klineData/df-GC15min-01-09-23 00:00:00.json")
+# newDf = pd.read_json("klineData/labeledDf-GC15min-01-09-23 00:00:00.json")
 newDf = getCryptoDf("/2023-data/MERGED-ETHUSDT-15m-23.csv")
 
 print(f"""
@@ -95,7 +95,8 @@ for i in range(len(newDf["coords"])):
 
         t += tk
 
-    loadingBar(i + 1, len(newDf["coords"]), f"Calculating distances: ", f"| elapsed: {round(time.time() - startTime, 2)}s")
+    loadingBar(i + 1, len(newDf["coords"]), f"Calculating distances: ",
+               f"| elapsed: {round(time.time() - startTime, 2)}s")
 
     sortedDistList = sorted(distList, key=lambda x: x[0])
     firstKNP = sortedDistList[:k]

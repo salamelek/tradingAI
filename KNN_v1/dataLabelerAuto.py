@@ -61,7 +61,7 @@ yMin = 0.05
 mMax = 2
 chopMax = 3
 
-# klineFile = "df-GC15min-01-09-23 00:00:00.json"
+# klineFile = "labeledDf-GC15min-01-09-23 00:00:00.json"
 klineFile = "ETHUSDT-15m-2020.csv"
 
 
