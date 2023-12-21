@@ -7,20 +7,22 @@ from binanceDataReader import getCryptoDf
 from loadingBar import loadingBar
 
 
-quadSize = 100
-k = 3
+quadSize = 90
+k = 5
 
 quadrants = {}
 
 
-def getDistance(p1, p2):
-    # we are assuming that p1 and p2 have the same number of coords
-    distSquared = 0
+# get the labeled points
+print("Fetching data... ")
 
-    for i in range(len(p1)):
-        distSquared += (p1[i] - p2[i]) ** 2
+# labeledDf = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json") # 2yrs 15m data
+labeledDf = pd.read_json("labeled_data/autoLabeledDf-ETHUSDT-3m-2023-10.json")
 
-    return math.sqrt(distSquared)
+# newDf = getCryptoDf("/2023-data/MERGED-ETHUSDT-15m-23.csv")
+newDf = getCryptoDf("/3m-data/ETHUSDT-3m-2023-11.csv")
+
+print("Done!")
 
 
 class Quadrant:
@@ -32,24 +34,37 @@ class Quadrant:
     def getKNN(self, point, k):
         # work with a deepcopy to not get ducked in the grass
         pIndexes = copy.deepcopy(self.pIndexes)
+        quadsLvl = 0
+        circleCheck = False
 
-        # if len(pIndexes) < k:
-        #     # TODO widen the quadrant
-        #     pass
+        while not circleCheck:
+            # FIXME idk if this works
+            while len(pIndexes) < k:
+                quadsLvl += 1
+                nextQuads = getNextQuads(quadsLvl, self)
 
-        # calculate knn
-        distDict = {}
+                for quad in nextQuads:
+                    pIndexes += quadrants[quad].pIndexes
 
-        for index in self.pIndexes:
-            p = labeledDf["coords"][index]
-            dist = getDistance(p, point)
-            distDict[dist] = index
+            # calculate knn
+            distDict = {}
 
-        firstKSortedKeys = sorted(distDict.keys())[:k]
+            for index in pIndexes:
+                p = labeledDf["coords"][index]
+                dist = getDistance(p, point)
+                distDict[dist] = index
 
-        # if distDict[firstKSortedKeys[-1]] > quadSize / 2:
-        #     # TODO i think quadSize / 2 is correct..
-        #     pass
+            firstKSortedKeys = sorted(distDict.keys())
+            firstKSortedKeys = firstKSortedKeys[:k]
+
+            # print(f"max distance: {distDict[firstKSortedKeys[-1]]}\n quadSize / 2: {(quadSize / 2) + (quadsLvl * quadSize)}")
+
+            if firstKSortedKeys[-1] <= (quadSize / 2) + (quadsLvl * quadSize):
+                # TODO i think quadSize / 2 is correct..
+                circleCheck = True
+
+            else:
+                quadsLvl += 1
 
         knnIndexes = []
 
@@ -66,12 +81,6 @@ def getQuadCoordsOfPoint(point):
 
     return tuple(quadCoords)
 
-
-# get the labeled points
-print("Fetching data... ")
-labeledDf = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json")
-newDf = getCryptoDf("/2023-data/MERGED-ETHUSDT-15m-23.csv")
-print("Done!")
 
 # place the points in the appropriate quadrant
 print("Placing the data points into quadrants... ")
@@ -91,6 +100,70 @@ print("Done!")
 print("\nresult of placing points:")
 print("quadrants: ", len(quadrants.keys()))
 print("points:    ", len(labeledDf["coords"]))
+
+
+def getDistance(p1, p2):
+    # we are assuming that p1 and p2 have the same number of coords
+    if len(p1) != len(p2):
+        raise Exception("P1 and P2 have not the same len of coords!!!")
+
+    distSquared = 0
+
+    for i in range(len(p1)):
+        distSquared += (p1[i] - p2[i]) ** 2
+
+    return math.sqrt(distSquared)
+
+
+def isOnCorrectLevel(startQuadCoords, quadCoords, quadLevel):
+    # check if at least one difference of coordinates is equal to quadLevel
+    for i in range(len(startQuadCoords)):
+        if abs(startQuadCoords[i] - quadCoords[i]) == quadLevel:
+            return True
+
+    return False
+
+
+def getNextQuads(quadLevel, startQuad):
+    """
+    This must return a list of ONLY the quadrants at the specified level
+
+    :param quadLevel:
+    :param startQuad:
+    :return:
+    """
+
+    startQuadCoords = startQuad.coords
+    nextQuadsCoords = []
+    """
+    now append to nextQuadCoords all the possible ± quadLevel permutations (?)
+    so if I have 2D and the start quad is (1, 1), then I have to append the following:
+        +: (2, 1), (1, 2), (2, 2)
+        -: (0, 1), (1, 0), (0, 0)
+        ±: (2, 0)
+        ∓: (0, 2)
+    the number of quadrants, when the number of dimensions is d adn quadLevel >= 1:
+        (2 * quadLevel + 1)^d - (2 * quadLevel - 1)^d
+    lets try for 2D, quadLevel = 2:
+        Base quadrant: (0, 0)
+        +: ( 2,  0), ( 2,  1), ( 0,  2), ( 1,  2), ( 2,  2)
+        -: (-2,  0), (-2, -1), ( 0, -2), (-1, -2), (-2, -2)
+        ±: (-1,  2), (-2,  2), (-2,  1)
+        ∓: ( 1, -2), ( 2, -2), ( 2, -1)
+        
+    The above stuff is waaay to hard for me to do 
+    so i will just loop through all the quadrants and see which ones are good
+    """
+
+    # for each quadrant in quadrants
+    for k in quadrants.keys():
+        quadCoords = quadrants[k].coords
+
+        if isOnCorrectLevel(startQuadCoords, quadCoords, quadLevel):
+            nextQuadsCoords.append(quadCoords)
+
+    return nextQuadsCoords
+
 
 predictedLabels = []
 

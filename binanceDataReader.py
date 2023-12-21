@@ -132,8 +132,8 @@ def getCryptoDf(filePath=""):
 
     fileString = f"../cryptoData/{filePath}"
 
-    # labeledDf = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
-    df = pd.read_csv(fileString)
+    df = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
+    # df = pd.read_csv(fileString)
 
     # here calculate all the necessary indicators and calculate coords
     df = getADX(df, 14)

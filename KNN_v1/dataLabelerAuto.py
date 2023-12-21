@@ -56,19 +56,19 @@ chopMax [float] : the maximum allowed chop (1 seems about good?)
 """
 xMin = 5
 xMax = 100
-yMin = 0.05
+yMin = 0.01
 # TODO maybe rethink how to measure this thing here
 mMax = 2
-chopMax = 3
+chopMax = 2
 
 # klineFile = "labeledDf-GC15min-01-09-23 00:00:00.json"
-klineFile = "ETHUSDT-15m-2020.csv"
+klineFile = "ETHUSDT-3m-2023-10.csv"
 
 
 def getDf():
     # let's load the data that we stole
     # return pd.read_json(f"klineData/{klineFile}")
-    return getCryptoDf()
+    return getCryptoDf(f"3m-data/{klineFile}")
 
 
 def plot(df, slopes):
