@@ -4,16 +4,8 @@ import matplotlib.pyplot as plt
 
 
 class DataPoint:
-    def __init__(self, open, close, high, low, volume, duration, time=0):
-        self.open = open
-        self.close = close
-        self.high = high
-        self.low = low
-        self.volume = volume
-        self.duration = duration
-        self.time = time
-
-        self.coords = [open, close, high, low, volume]
+    def __init__(self, coords):
+        self.coords = coords
 
     def cosineSimilarity(self, other):
         dotProduct = self.dotProduct(other)
@@ -46,6 +38,9 @@ class Chart:
         self.pair = pair
         self.timeInterval = timeInterval
 
+    def __str__(self):
+        return f"Chart of length {self.numOfDataPoints} of {self.pair}."
+
     def display(self):
         print("Displaying chart... ", end="")
 
@@ -55,7 +50,7 @@ class Chart:
         # Assuming self.dataPoints is a list of data points
         for i in range(self.numOfDataPoints):
             xValues.append(i)
-            yValues.append(self.dataPoints[i].open)
+            yValues.append(self.dataPoints[i].coords[0])
 
         plt.plot(xValues, yValues)
         ax = plt.gca()
@@ -75,7 +70,13 @@ class DpGroup:
     A dataPoint group is a group of data points
     The index of the groups goes from 0 to chart.size - group.size
     the index 0 of a Group is at the last index of the chart (reversed)
-    the index 0 of a dataPoint in the group is the first one from the left (normal)
+    the index 0 of a dataPoint in the group is the last one from left to right (reversed too)
+
+    chart:       a b c d e f
+    dp index:    0 1 2 3 4 5
+    group2:     |a,b|c,d|e,f|
+    dp index:    1 0 1 0 1 0
+    group index:  2   1   0
     """
 
     def __init__(self, chart, size, index):
@@ -95,20 +96,23 @@ class DpGroup:
 
 
 class Prediction:
-    def __init__(self, groupSize, k):
+    def __init__(self, groupSize, k, index):
         self.valuesCounter = 0
         self.largestValues = []
         self.largestIndexes = []
         self.k = k
         self.groupSize = groupSize
+        self.index = index
 
     def __str__(self):
         return f"""
 PREDICTION DATA:
-    Group size:         {self.groupSize}
-    Number of nn (k):   {self.k}
-    Values:             {self.largestValues}
-    Indexes:            {self.largestIndexes}
+    Group size:             {self.groupSize}
+    Number of nn (k):       {self.k}
+    Values:                 {self.largestValues}
+    Indexes:                {self.largestIndexes}
+    Predicted direction:    {self.getPrediction()}
+    Target index:           {self.index}
         """
 
     def addThisValue(self, value, index):
@@ -151,7 +155,9 @@ PREDICTION DATA:
         :return:
         """
 
-        direction = 0
+        # TODO here im only checking close values, but i should check every value
+
+        directions = []
 
         valuesDict = {}
         for i in range(len(self.largestValues)):
@@ -160,9 +166,19 @@ PREDICTION DATA:
         sortedKeys = sorted(valuesDict, reverse=True)
 
         for key in sortedKeys:
-            # check where the price goes
+            # check where does the price go
+            lastValueIndex = valuesDict[key]
+            nextValueIndex = lastValueIndex + 1
 
-        return direction
+            lastValue = chart.dataPoints[lastValueIndex]
+            nextValue = chart.dataPoints[nextValueIndex]
+
+            if lastValue.coords[0] > nextValue.coords[0]:
+                directions.append(-1)
+            elif lastValue.coords[0] < nextValue.coords[0]:
+                directions.append(1)
+
+        return sum(directions) / len(directions)
 
 
 def getChart(filePath, pair, timeInterval):
@@ -180,7 +196,8 @@ def getChart(filePath, pair, timeInterval):
                 continue
 
             # time, Open, High, Low, Close, Volume
-            dp = DataPoint(float(row[1]), float(row[4]), float(row[2]), float(row[3]), float(row[5]), timeInterval)
+            # FIXME when using only 1D, every point is the same
+            dp = DataPoint([float(row[4])])
             dataPoints.append(dp)
 
     print("Done!")
@@ -188,11 +205,16 @@ def getChart(filePath, pair, timeInterval):
     return Chart(dataPoints, pair, timeInterval)
 
 
-def getPrediction(chart, groupSize, k):
-    prediction = Prediction(groupSize, k)
-    currentGroup = DpGroup(chart, groupSize, 0)
+def getPrediction(chart, groupSize, k, dpIndex):
+    index = chart.size() - dpIndex
 
-    for i in range(1, chart.size() - groupSize):
+    prediction = Prediction(groupSize, k, dpIndex)
+    currentGroup = DpGroup(chart, groupSize, index)
+
+    for i in range(0, chart.size() - groupSize):
+        if i == index:
+            continue
+
         diff = currentGroup.similarTo(DpGroup(chart, groupSize, i))
         prediction.addThisValue(diff, i)
 
@@ -201,10 +223,18 @@ def getPrediction(chart, groupSize, k):
 
 if __name__ == '__main__':
     chart = getChart("../forexData/EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv", "EURUSD", 15 * 60)
-    prediction = getPrediction(chart, 10, 10)
+    prediction = getPrediction(chart, 10, 5, 1000)
 
-    print(prediction)
-
+    # print(chart)
+    # print(prediction)
     # chart.display()
 
-    print(prediction.getPrediction())
+    p1 = DataPoint([1])
+    p2 = DataPoint([1])
+    p3 = DataPoint([10])
+
+    print(p1.cosineSimilarity(p2))
+    print(p1.cosineSimilarity(p3))
+    print()
+    print(p1.dotProduct(p2))
+    print(p1.dotProduct(p3))
