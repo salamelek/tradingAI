@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from binanceDataReader import getCryptoDf
+from swissSiteDataReader import getSwissDataDf
 from loadingBar import loadingBar
 
 
@@ -17,10 +18,12 @@ quadrants = {}
 print("Fetching data... ")
 
 # labeledDf = pd.read_json("labeled_data/autoLabeledDf-MERGED-ETHUSDT-15m-2020.json") # 2yrs 15m data
-labeledDf = pd.read_json("labeled_data/autoLabeledDf-ETHUSDT-3m-2023-10.json")
+# labeledDf = pd.read_json("labeled_data/autoLabeledDf-ETHUSDT-3m-2023-10.json")
+labeledDf = pd.read_json("labeled_data/autoLabeledDf-EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.json")
 
 # newDf = getCryptoDf("/2023-data/MERGED-ETHUSDT-15m-23.csv")
-newDf = getCryptoDf("/3m-data/ETHUSDT-3m-2023-11.csv")
+# newDf = getCryptoDf("/3m-data/ETHUSDT-3m-2023-11.csv")
+newDf = getSwissDataDf(f"../forexData/EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv")
 
 print("Done!")
 

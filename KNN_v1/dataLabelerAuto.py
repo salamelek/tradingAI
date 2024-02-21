@@ -43,6 +43,7 @@ import matplotlib.pyplot as plt
 
 from KNN_v1.loadingBar import loadingBar
 from binanceDataReader import getCryptoDf
+from swissSiteDataReader import getSwissDataDf
 
 
 """
@@ -53,22 +54,27 @@ xMax    [int]   : number of maximum klines for a slope
 yMin    [float] : the minimum change in % (0.11 = 11%)
 mMax    [int]   : the maximum allowed slope of a slope
 chopMax [float] : the maximum allowed chop (1 seems about good?)
+    Stocks: ~1
+    Crypto: ~1-5
+    Forex: ~0.0001
 """
 xMin = 5
 xMax = 100
-yMin = 0.01
+yMin = 0.005
 # TODO maybe rethink how to measure this thing here
 mMax = 2
-chopMax = 2
+chopMax = 0.0008
 
 # klineFile = "labeledDf-GC15min-01-09-23 00:00:00.json"
-klineFile = "ETHUSDT-3m-2023-10.csv"
+# klineFile = "ETHUSDT-3m-2023-10.csv"
+klineFile = "EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv"
 
 
 def getDf():
     # let's load the data that we stole
     # return pd.read_json(f"klineData/{klineFile}")
-    return getCryptoDf(f"3m-data/{klineFile}")
+    # return getCryptoDf(f"3m-data/{klineFile}")
+    return getSwissDataDf(f"../forexData/{klineFile}")
 
 
 def plot(df, slopes):
