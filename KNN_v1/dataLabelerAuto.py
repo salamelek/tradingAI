@@ -218,11 +218,11 @@ def getSlopesTheSlowWay(df, xMin, xMax, yMin, mMax, chopMax):
 
 def getLabeledData(df, slopes):
     """
-    This function takes the dataFrame alongside the slopes dict and labels each kline in the dataframe
+    This function takes the dataFrame alongside the slopes avgDistDict and labels each kline in the dataframe
     Hold: 0
     Sell: -1
     Buy: 1
-    The key of the dict is the index of the kline
+    The key of the avgDistDict is the index of the kline
 
     :param df:
     :param slopes:

@@ -34,7 +34,7 @@ datetime_object = datetime.strptime(datetime_str, '%d-%m-%y %H:%M:%S')
 startTime = int(datetime.timestamp(datetime_object))
 print(f"Starting date: {datetime_object}\nUnix seconds: {startTime}")
 
-# load a dict from a json file
+# load a avgDistDict from a json file
 # with open('labeled_data/adx_cci_rsi_5min.json') as jsonFile:
 #     data = json.load(jsonFile)
 
@@ -158,7 +158,7 @@ def logKline(sTime):
     bufferPoint[2].append(cci)
     bufferPoint[3].append(rsi)
 
-    # add the point to the data dict
+    # add the point to the data avgDistDict
     # the buffer point must be copied to avoid references to the same buffer point
     # data[label].append(copy.deepcopy(bufferPoint))
     klines[strTime] = {"close": bufferPoint[0][-1], "coords": bufferPoint[1] + bufferPoint[2] + bufferPoint[3]}
