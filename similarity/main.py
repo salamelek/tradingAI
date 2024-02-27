@@ -32,12 +32,15 @@ def getDataPoints(filePath, skipNullRows=True):
                 continue
 
             # difference between close and open price
-            diff = float(row[4]) - float(row[1])
+            diffOC = float(row[4]) - float(row[1])
+
+            # difference between high and low
+            diffHL = float(row[2]) - float(row[3])
 
             # volume
             vol = float(row[5])
 
-            dataPoints.append((diff, vol))
+            dataPoints.append((diffOC, vol))
 
     print("Done!")
 
@@ -143,26 +146,46 @@ def getPrediction(dataPoints, dpIndex, groupSize, k):
     return bestDistDict
 
 
+def weightFunction(x, n=3):
+    """
+    this function is based on e^-kx
+    n is a real positive number
+    when n increases, the "severity" of the distance increases too
+
+    :param n:
+    :param x:
+    :return:
+    """
+
+    if x < 0:
+        raise Exception("given distance mustn't be negative!")
+
+    if n < 0:
+        raise Exception("n must be positive!")
+
+    return np.e ** (n * x * -1)
+
+
 def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict):
     originalDirection = dataPoints[dpIndex + groupSize][0]
     # print()
 
     counter = 1
-    avgDirectionTot = 0
+    weightedAvgDirectionTot = 0
     for key in pDict.keys():
         value = key
         index = pDict[key]
         # print(f"Price direction prediction {counter}: {dataPoints[index + groupSize][0]}")
-        avgDirectionTot += dataPoints[index + groupSize][0]
+        weightedAvgDirectionTot += dataPoints[index + groupSize][0] * weightFunction(value)
 
         counter += 1
 
-    avgDirection = avgDirectionTot / k
+    # TODO instead of checking only the next direction, check the following trend
 
-    # TODO weighted average (best points are more valuable)
+    weightedAvgDirection = weightedAvgDirectionTot / k
 
     sameDirection = True
-    if originalDirection * avgDirection < 0:
+    if originalDirection * weightedAvgDirection < 0:
         sameDirection = False
 
     # print()
@@ -183,10 +206,10 @@ if __name__ == '__main__':
     groupSize = 5
     k = 3
 
-    displayDataPoints(dataPoints)
+    # displayDataPoints(dataPoints)
 
     correctCount = 0
-    for i in range(500):
+    for i in range(20000):
         predictionDict = getPrediction(dataPoints, i, groupSize, k)
         res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict)
 
@@ -194,3 +217,7 @@ if __name__ == '__main__':
             correctCount += 1
 
         print(f"{(round(correctCount / (i + 1) * 100, 2))}%     | {correctCount} / {i + 1} | {res}")
+
+
+# 51.23%     | 10245 / 20000 | True (open-close, volume)
+# 51.55%     | 7733 / 15000 | True  (opem-close, volume, high-low)
