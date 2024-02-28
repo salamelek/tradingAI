@@ -16,6 +16,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class colors:
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    RESET = '\033[0m'  # Reset to default color
+
+
 def getDataPoints(filePath, skipNullRows=True):
     print("Getting dataPoints from csv... ", end="")
 
@@ -40,7 +50,9 @@ def getDataPoints(filePath, skipNullRows=True):
             # volume
             vol = float(row[5])
 
+            # dataPoints.append((diffOC, vol, diffHL))
             dataPoints.append((diffOC, vol))
+            # dataPoints.append((diffOC,))
 
     print("Done!")
 
@@ -149,13 +161,12 @@ def getPrediction(dataPoints, dpIndex, groupSize, k):
     return bestDistDict
 
 
-def weightFunction(x, n=1/4):
+def weightFunction(x):
     """
     this function is based on e^-kx
     n is a real positive number
     when n increases, the "severity" of the distance increases too
 
-    :param n:
     :param x:
     :return:
     """
@@ -164,66 +175,75 @@ def weightFunction(x, n=1/4):
         raise Exception("given distance mustn't be negative!")
 
     if n < 0:
-        raise Exception("n must be positive!")
+        raise Exception("n mustn't be negative!")
 
     return np.e ** (n * x * -1)
 
 
-def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict, distThreshold):
-    originalDirection = dataPoints[dpIndex + groupSize][0]
+def analisePredictionDict(predictionDict):
+    """
+    analyses the given prediction dictionary
+    returns the weighted average value
 
-    counter = 1
-    weightedAvgDirectionTot = 0
-    for key in pDict.keys():
-        weightedAvgDirectionTot += weightFunction(key)
+    weighted average:
+    sum(value1 * weight1, value2 * weight2, ...) / sum(weight1, weight2, ...)
+    value:  next price change
+    weight: weight function of the distance
 
-        counter += 1
+    returns 0 if the weighted average does not meet the quota (lethal company reference)
 
-    # TODO instead of checking only the next direction, check the following trend
+    :param predictionDict:
+    :return:
+    """
 
-    weightedAvgDirection = weightedAvgDirectionTot / k
+    sumWeightedValues = 0
+    sumWeights = 0
 
-    # if the average weighted distance is shit, don't consider it and hold
-    # FIXME something seriously wrong with the weight system (negative dist etc)
-    if weightedAvgDirection > distThreshold:
-        # dont consider the value
-        return None
+    for dist in predictionDict.keys():
+        index = predictionDict[dist]
+        weight = weightFunction(dist)
+        value = dataPoints[index + groupSize][0]    # index [0] is the change open-close
 
-    sameDirection = True
-    if originalDirection * weightedAvgDirection < 0:
-        sameDirection = False
+        sumWeightedValues += value * weight
+        sumWeights += weight
 
-    # print()
-    # print(f"Price direction after original group:   {originalDirection}")
-    # print(f"Non-weighted average direction:         {avgDirection}")
-    # print(f"Direction difference:                   {avgDirection - originalDirection}")
-    # print(f"Same direction:                         {sameDirection}")
+    weightedAverage = sumWeightedValues / sumWeights
 
-    return sameDirection
+    if abs(weightedAverage) < threshold:
+        return 0
+
+    return weightedAverage
 
 
 if __name__ == '__main__':
-    dataPoints = getDataPoints(
-        "../forexData/EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv",
-        skipNullRows=True
-    )
+    dataPoints = getDataPoints("../forexData/EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv")
     dpIndex = 0
-    groupSize = 5
-    k = 3
-
-    # displayDataPoints(dataPoints)
+    groupSize = 3
+    k = 5
+    n = 1
+    threshold = 0.0001
 
     correctCount = 0
     skipped = 0
     for i in range(20000):
         predictionDict = getPrediction(dataPoints, i, groupSize, k)
-        res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict, 0.05)
+        predictedNextValue = analisePredictionDict(predictionDict)
 
-        if res is None:
-            skipped += 1
-            continue
+        realNextValue = dataPoints[i + groupSize][0]
 
-        if res:
+        if predictedNextValue * realNextValue < 0:
+            # if they are not the same direction
             correctCount += 1
+            print(f"{colors.GREEN}{(correctCount / (i + 1 - skipped)) * 100:.2f}% correct     {correctCount}/{i + 1 - skipped}    | {i+1}{colors.RESET}")
+        elif predictedNextValue * realNextValue > 0:
+            # they are the same direction
+            print(f"{colors.RED}{(correctCount / (i + 1 - skipped)) * 100:.2f}% incorrect   {correctCount}/{i + 1 - skipped}    | {i+1}{colors.RESET}")
+        else:
+            # they did not meet the threshold
+            skipped += 1
 
-        print(f"{(round(correctCount / (i + 1 - skipped) * 100, 2))}%     | {correctCount} / {i + 1} | {res} | skipped: {skipped}")
+            if i + 1 - skipped == 0:
+                print(f"{colors.YELLOW}NaN% skipped     {correctCount}/{i + 1 - skipped}    | {i+1}{colors.RESET}")
+
+            else:
+                print(f"{colors.YELLOW}{(correctCount / (i + 1 - skipped)) * 100:.2f}% skipped     {correctCount}/{i + 1 - skipped}    | {i+1}{colors.RESET}")
