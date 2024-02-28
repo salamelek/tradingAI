@@ -114,6 +114,9 @@ def getPrediction(dataPoints, dpIndex, groupSize, k):
     here a group is a tuple of dataPoints.
     index 0 is at index 0 and so on
 
+    returns the closest groups and their indexes
+    {distance: index}
+
     :param dataPoints:
     :param dpIndex:     index of the original group
     :param groupSize:
@@ -146,7 +149,7 @@ def getPrediction(dataPoints, dpIndex, groupSize, k):
     return bestDistDict
 
 
-def weightFunction(x, n=3):
+def weightFunction(x, n=1/4):
     """
     this function is based on e^-kx
     n is a real positive number
@@ -163,20 +166,16 @@ def weightFunction(x, n=3):
     if n < 0:
         raise Exception("n must be positive!")
 
-    return 2 * np.e ** (n * x * -1)
+    return np.e ** (n * x * -1)
 
 
 def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict, distThreshold):
     originalDirection = dataPoints[dpIndex + groupSize][0]
-    # print()
 
     counter = 1
     weightedAvgDirectionTot = 0
     for key in pDict.keys():
-        value = key
-        index = pDict[key]
-        # print(f"Price direction prediction {counter}: {dataPoints[index + groupSize][0]}")
-        weightedAvgDirectionTot += dataPoints[index + groupSize][0] * weightFunction(value)
+        weightedAvgDirectionTot += weightFunction(key)
 
         counter += 1
 
@@ -185,7 +184,6 @@ def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict, distThreshol
     weightedAvgDirection = weightedAvgDirectionTot / k
 
     # if the average weighted distance is shit, don't consider it and hold
-    print(weightedAvgDirection)
     # FIXME something seriously wrong with the weight system (negative dist etc)
     if weightedAvgDirection > distThreshold:
         # dont consider the value
@@ -219,7 +217,7 @@ if __name__ == '__main__':
     skipped = 0
     for i in range(20000):
         predictionDict = getPrediction(dataPoints, i, groupSize, k)
-        res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict, 0.01)
+        res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict, 0.05)
 
         if res is None:
             skipped += 1
@@ -229,7 +227,3 @@ if __name__ == '__main__':
             correctCount += 1
 
         print(f"{(round(correctCount / (i + 1 - skipped) * 100, 2))}%     | {correctCount} / {i + 1} | {res} | skipped: {skipped}")
-
-
-# 51.23%     | 10245 / 20000 | True (open-close, volume) (no dist check)
-# 51.55%     | 7733 / 15000 | True  (opem-close, volume, high-low) (no dist check)
