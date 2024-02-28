@@ -143,6 +143,8 @@ def getPrediction(dataPoints, dpIndex, groupSize, k):
         # append the best average distances to a dict long k
         bestDistDict = appendDistToDict(bestDistDict, averageDistance, i, k)
 
+    # TODO if the average weighted distance is shit, dont consider it and hold
+
     return bestDistDict
 
 
