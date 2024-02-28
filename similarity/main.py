@@ -143,8 +143,6 @@ def getPrediction(dataPoints, dpIndex, groupSize, k):
         # append the best average distances to a dict long k
         bestDistDict = appendDistToDict(bestDistDict, averageDistance, i, k)
 
-    # TODO if the average weighted distance is shit, dont consider it and hold
-
     return bestDistDict
 
 
@@ -165,10 +163,10 @@ def weightFunction(x, n=3):
     if n < 0:
         raise Exception("n must be positive!")
 
-    return np.e ** (n * x * -1)
+    return 2 * np.e ** (n * x * -1)
 
 
-def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict):
+def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict, distThreshold):
     originalDirection = dataPoints[dpIndex + groupSize][0]
     # print()
 
@@ -185,6 +183,13 @@ def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict):
     # TODO instead of checking only the next direction, check the following trend
 
     weightedAvgDirection = weightedAvgDirectionTot / k
+
+    # if the average weighted distance is shit, don't consider it and hold
+    print(weightedAvgDirection)
+    # FIXME something seriously wrong with the weight system (negative dist etc)
+    if weightedAvgDirection > distThreshold:
+        # dont consider the value
+        return None
 
     sameDirection = True
     if originalDirection * weightedAvgDirection < 0:
@@ -211,15 +216,20 @@ if __name__ == '__main__':
     # displayDataPoints(dataPoints)
 
     correctCount = 0
+    skipped = 0
     for i in range(20000):
         predictionDict = getPrediction(dataPoints, i, groupSize, k)
-        res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict)
+        res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict, 0.01)
+
+        if res is None:
+            skipped += 1
+            continue
 
         if res:
             correctCount += 1
 
-        print(f"{(round(correctCount / (i + 1) * 100, 2))}%     | {correctCount} / {i + 1} | {res}")
+        print(f"{(round(correctCount / (i + 1 - skipped) * 100, 2))}%     | {correctCount} / {i + 1} | {res} | skipped: {skipped}")
 
 
-# 51.23%     | 10245 / 20000 | True (open-close, volume)
-# 51.55%     | 7733 / 15000 | True  (opem-close, volume, high-low)
+# 51.23%     | 10245 / 20000 | True (open-close, volume) (no dist check)
+# 51.55%     | 7733 / 15000 | True  (opem-close, volume, high-low) (no dist check)
