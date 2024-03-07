@@ -15,6 +15,8 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 
+from binanceDataReader import getCryptoDf
+
 
 def getDataPoints(filePath, skipNullRows=True):
     print("Getting dataPoints from csv... ", end="")
@@ -169,7 +171,7 @@ def weightFunction(x, n=1/4):
     return np.e ** (n * x * -1)
 
 
-def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict, distThreshold):
+def analisePredictionDictShit(dataPoints, dpIndex, groupSize, k, pDict, distThreshold):
     originalDirection = dataPoints[dpIndex + groupSize][0]
 
     counter = 1
@@ -202,28 +204,60 @@ def analisePredictionDict(dataPoints, dpIndex, groupSize, k, pDict, distThreshol
     return sameDirection
 
 
+def analisePredictionDict(pDict, ohlc, dpIndex):
+    originIndex = dpIndex + groupSize
+
+    directions = {"original": ohlc[originIndex]["close"] - ohlc[originIndex]["open"], "predicted": []}
+    for key in pDict.keys:
+        predictIndex = pDict[key]
+        predictDist = key
+
+        directions["predicted"].append(ohlc[predictIndex]["close"] - ohlc[predictIndex]["open"])
+
+    return directions
+
+
 if __name__ == '__main__':
-    dataPoints = getDataPoints(
-        "../forexData/EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv",
-        skipNullRows=True
-    )
+    # dataPoints = getDataPoints(
+    #     "../forexData/EURUSD_Candlestick_15_M_BID_01.01.2022-01.01.2023.csv",
+    #     skipNullRows=False
+    # )
+
+    # cryptoDF = getCryptoDf("../cryptoData/MERGED-ETHUSDT-15m-20-22.csv")
+    cryptoDF = getCryptoDf("../cryptoData/ETHUSDT-15m-2020-01.csv")
+
+    dataPoints = []
+    for row in cryptoDF["coords"]:
+        dataPoints.append((row[0], row[1], row[2]))
+
+
     dpIndex = 0
     groupSize = 5
     k = 3
-
-    # displayDataPoints(dataPoints)
+    distThreshold = 7
 
     correctCount = 0
     skipped = 0
-    for i in range(20000):
-        predictionDict = getPrediction(dataPoints, i, groupSize, k)
-        res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict, 0.05)
 
-        if res is None:
-            skipped += 1
+    print("started predicting")
+
+    for i in range(1000):
+        print(i)
+        predictionDict = getPrediction(dataPoints, i, groupSize, k)
+
+        if list(predictionDict.keys())[0] > distThreshold:
             continue
 
-        if res:
-            correctCount += 1
+        print(predictionDict)
+        displayDataPoints(dataPoints)
 
-        print(f"{(round(correctCount / (i + 1 - skipped) * 100, 2))}%     | {correctCount} / {i + 1} | {res} | skipped: {skipped}")
+        # res = analisePredictionDict(dataPoints, i, groupSize, k, predictionDict, distThreshold)
+        #
+        # if res is None:
+        #     skipped += 1
+        #     continue
+        #
+        # if res:
+        #     correctCount += 1
+        #
+        # print(f"{(round(correctCount / (i + 1 - skipped) * 100, 2))}%     | {correctCount} / {i + 1} | {res} | skipped: {skipped}")

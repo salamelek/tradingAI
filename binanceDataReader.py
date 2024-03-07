@@ -83,7 +83,7 @@ def getCCI(df, period):
     return df
 
 
-def setCoords(df):
+def setCoords(df, dim=5):
     """
     THis will set the coords to the "old" 5 points for each indicator
 
@@ -94,13 +94,13 @@ def setCoords(df):
     # adx, cci, rsi
     bufferPoint = [[], [], []]
 
-    bufferLen = 5
+    bufferLen = dim
     for i in range(bufferLen):
         bufferPoint[0].append(df["adx"][i])
         bufferPoint[1].append(df["cci"][i])
         bufferPoint[2].append(df["rsi"][i])
 
-    coords = [np.nan, np.nan, np.nan, np.nan, np.nan]
+    coords = [np.nan for _ in range(dim)]
 
     for j in range(bufferLen, len(df["close"])):
         flatList = []
@@ -132,8 +132,8 @@ def getCryptoDf(filePath=""):
 
     fileString = f"../cryptoData/{filePath}"
 
-    df = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
-    # df = pd.read_csv(fileString)
+    # df = pd.read_csv(fileString, usecols=[1, 2, 3, 4], header=None, names=["open", "high", "low", "close"])
+    df = pd.read_csv(fileString)
 
     # here calculate all the necessary indicators and calculate coords
     df = getADX(df, 14)
@@ -143,7 +143,7 @@ def getCryptoDf(filePath=""):
     df = df.dropna()
     df = df.reset_index(drop=True)
 
-    df = setCoords(df)
+    df = setCoords(df, dim=1)
 
     print("Done!")
 

@@ -13,7 +13,7 @@ DETECT A SLOPE:
         2) xMax: the max time that can pass from the beginning of the slope to the end of it
         3) yMin: the min change in price that has to happen for a slope to be considered
         4) mMax: the max inclination that the slope can have (we don't want to consider those instant cliffs)
-        5) chopMax: the max amount of chope that we allow a slope to have
+        5) chopMax: the max value of chope that we allow a slope to have
             But how do I detect chop?
                 1) average distance from line
                 2) area between price and line
